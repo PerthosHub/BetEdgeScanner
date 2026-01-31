@@ -1,30 +1,54 @@
+// FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
-Status: Fase 3c - Modularisering & Stabiliteit
-Huidige Versie: 2.0.0
-Datum: 30 Jan 2026
+Status: Fase 3d - Stabiliteit & Versiebeheer
+Huidige Versie: 2.1.0
+Datum: 31 Jan 2026
 
 ---
 
-## ✅ RECENT VOLTOOID
-- [x] **Modularisering Background:** "Het Brein" gesplitst in 4 logische modules: Sessie, Config, Verwerking en Database.
-- [x] **Manifest V3 Persistentie:** Overgestapt van vluchtige variabelen naar `chrome.storage.local` voor broker-configuratie.
-- [x] **Type Safety:** Chrome API types correct geïmplementeerd in alle background modules.
-- [x] **Mirror Strategy:** Werkende spiegeling van Kambi-data naar BetCity via de nieuwe `scanVerwerker`.
+## ✅ LAATST AFGEROND
+- [x] **Productie-klaar maken:** Volledige synchronisatie tussen Database, Background en UI met professioneel versiebeheer en GitHub backup.
 
 ---
 
 ## 🚀 HUIDIGE FOCUS
 
 ### 1. 🛠️ Content Script Refactor (De "Ogen")
-*   **Doel:** Dezelfde netheid als in de background toepassen op de content scripts.
-*   **Actie:** `index.ts` (de router) opschonen en zorgen dat elke broker (Unibet, TOTO) een strikt eigen bestand houdt.
+*   **Doel:** Dezelfde modulariteit als in de background toepassen op de content scripts.
+*   **Actie:** `index.ts` (de router) opschonen. Zorgen dat elke broker-parser (Unibet, TOTO) een strikt eigen bestand houdt zonder overlap.
 
-### 2. 🛡️ Data Integriteit
-*   **Doel:** Voorkomen dat verlopen odds in de database blijven "hangen".
-*   **Actie:** Ontwikkelen van een 'cleanup' signaal wanneer een wedstrijd van de pagina verdwijnt.
+### 2. 🛡️ Data Integriteit & Opschoning
+*   **Doel:** Voorkomen dat "verweesde" odds in de database blijven staan.
+*   **Actie:** Ontwikkelen van een 'cleanup' signaal; als een wedstrijd niet meer in de DOM staat, moet dit gemeld kunnen worden aan de database.
 
 ---
 
-## 🔮 TOEKOMST
-- [ ] **Live Detectie:** Herkennen van 'LIVE' badges.
-- [ ] **Error Recovery:** Automatisch herladen van gecrashte tabbladen.
+## 🔮 BACKLOG (TOEKOMST)
+- [ ] **Live Detectie:** Herkennen van 'LIVE' badges voor aparte filtering.
+- [ ] **Error Recovery:** Automatisch herladen van gecrashte of bevroren tabbladen.
+- [ ] **Multi-Tab Orchestration:** Voorkomen dat meerdere open tabs van dezelfde broker tegelijk schrijven.
+
+---
+
+## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.1.0] - 2026-01-31
+**"The Database & Integrity Update"**
+- **FIX:** Database Schrijffout (42P10) opgelost door `upsert` te vervangen door `insert` (geen extra DB-constraints nodig).
+- **FIX:** Database Schema Sync: Alle code aangepast naar Snake_Case (`is_active`, `group_name`, `odds_1`, `user_id`).
+- **FIX:** Type Safety: Mismatches tussen `Broker` objecten en `string` ID's in de background afgehandeld.
+- **FEAT:** GitHub Integratie: Project succesvol gekoppeld aan private repository voor versiebeheer.
+- **FEAT:** Centraal Versiebeheer: Implementatie van `src/version.ts` als 'Single Source of Truth'.
+- **FEAT:** UI Update: Versienummer en status-label nu zichtbaar in de Popup Header.
+- **DOC:** Ecosysteem geüpdatet naar v2.5 (Auditability & Transactionele regels).
+
+### [2.0.0] - 2026-01-30
+**"The Great Modular Refactor"**
+- **REFACTOR:** Background script volledig opgesplitst in 4 logische modules (Sessie, Config, Verwerking, Database).
+- **MV3:** Overgestapt naar `chrome.storage.local` voor broker-configuratie (Manifest V3 persistentie).
+- **FEAT:** Mirror Strategy: Werkende automatische spiegeling van Kambi-data naar BetCity/Jack's op basis van broker-groepen.
+- **LOGGING:** Nieuwe Terminal view in de popup met kleurgecodeerde logs voor real-time debugging.
+- **TYPES:** Chrome API types (`chrome.runtime`, `chrome.storage`) volledig geïmplementeerd.
+
+---
+*Roadmap bijgewerkt door AI Architect op 31 Jan 2026.*
