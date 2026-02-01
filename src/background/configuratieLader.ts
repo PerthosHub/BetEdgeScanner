@@ -1,41 +1,44 @@
-// FILE: src/background/configuratieLader.ts
 import { supabase } from '../lib/supabase';
 import { Broker } from '../types';
 import { voegLogToe } from '../utils/storage';
+
+interface RawBrokerRow {
+    id: string;
+    name: string;
+    website: string | null;
+    group_name: string; 
+    is_active: boolean; 
+    notes: string | null;
+}
 
 export const verversConfiguratie = async (): Promise<Broker[]> => {
   try {
     console.log('🔄 Config verversen uit database...');
 
-    // FIX: Gebruik de DB kolomnaam 'is_active'
     const { data, error } = await supabase
       .from('brokers')
-      .select('*')
+      .select('id, name, website, group_name, is_active, notes') 
       .eq('is_active', true);
 
-    if (error) {
-      console.error('❌ Supabase Config Fout:', JSON.stringify(error, null, 2));
-      await voegLogToe(
-        'ACHTERGROND (BREIN)',
-        'Config Fout',
-        'Kon brokers niet ophalen uit DB',
-        { errorDetails: error },
-        'error'
-      );
-      return [];
-    }
+    if (error) throw error;
+    if (!data || data.length === 0) return [];
 
-    if (!data || data.length === 0) {
-      console.warn('⚠️ Geen actieve brokers gevonden in database!');
-      await voegLogToe('ACHTERGROND (BREIN)', 'Config Leeg', 'Geen brokers actief.', null, 'warning');
-      return [];
-    }
+    const mappedBrokers: Broker[] = (data as RawBrokerRow[]).map(row => ({
+        id: row.id,
+        name: row.name,
+        website: row.website || undefined,
+        group: row.group_name,   
+        isActive: row.is_active, 
+        notes: row.notes || undefined
+    }));
 
-    await chrome.storage.local.set({ brokers: data });
-    return data as Broker[];
+    await chrome.storage.local.set({ brokers: mappedBrokers });
+    return mappedBrokers;
 
   } catch (err: any) {
-    console.error('💥 Kritieke fout in configuratieLader:', err);
+    console.error('💥 Config laadfout:', err);
+    // FIX: Gebruik exacte string 'ACHTERGROND (BREIN)'
+    await voegLogToe('ACHTERGROND (BREIN)', 'Config Fout', 'Kon brokers niet laden', { err }, 'error');
     return [];
   }
 };
@@ -49,23 +52,33 @@ export const zoekBrokerBijUrl = async (url: string): Promise<Broker | undefined>
   }
 
   const cleanUrl = url.toLowerCase().replace(/https?:\/\/(www\.)?/, '');
-  
   return brokers.find(b => 
     b.website && cleanUrl.includes(b.website.toLowerCase().replace(/https?:\/\/(www\.)?/, ''))
   );
 };
 
-export const bepaalMirrorDoelwitten = async (bronBrokerId: string): Promise<string[]> => {
-    const storage = await chrome.storage.local.get(['brokers']);
-    const brokers: Broker[] = (storage.brokers as Broker[]) || [];
+export const bepaalMirrorDoelwitten = async (bronBrokerId: string): Promise<Broker[]> => {
+  const storage = await chrome.storage.local.get(['brokers']);
+  const brokers: Broker[] = (storage.brokers as Broker[]) || [];
 
-    const source = brokers.find(b => b.id === bronBrokerId);
-    if (!source) return [bronBrokerId];
+  const source = brokers.find(b => b.id === bronBrokerId);
+  
+  // Logica update: Check of source en group bestaan
+  if (!source || !source.group) {
+      console.warn(`⚠️ Kan niet spiegelen: Bron broker of groep onbekend (ID: ${bronBrokerId})`);
+      return source ? [source] : [];
+  }
 
-    // FIX: Gebruik 'group_name' en 'is_active'
-    const targets = brokers
-        .filter(b => b.is_active && b.group_name === source.group_name)
-        .map(b => b.id);
-    
-    return targets.length > 0 ? targets : [bronBrokerId];
+  const sourceGroup = source.group.toLowerCase().trim();
+
+  // Zoek targets (case-insensitive)
+  const targets = brokers.filter(b => 
+      b.isActive && 
+      b.group && 
+      b.group.toLowerCase().trim() === sourceGroup
+  );
+  
+  console.log(`🪞 Mirror Check: Bron='${source.name}' (${sourceGroup}). Gevonden targets: ${targets.map(t => t.name).join(', ')}`);
+
+  return targets.length > 0 ? targets : [source];
 };

@@ -25,7 +25,6 @@ Je bent de **Senior Lead Architect** van de "BetEdge Scanner" (Extensie).
 
 📂 RICHTLIJNEN VOOR "ONDERSTEUNENDE BESTANDEN":
 *(Dit betreft: `_ECOSYSTEM.md`, `_BES_ROADMAP.md` en `version.ts`)*
-- ➕  **Toevoegen:** Vul nieuwe informatie altijd aan het einde van de relevante secties aan.
 - 🚫  **Niet Wissen:** Verwijder nooit bestaande informatie of changelogs.
 - 🗣️  **Overleg:** Vraag Johan expliciet om toestemming voordat je informatie als "verouderd" verwijdert.
 Schrijf de inhoud van deze bestanden altijd in markdown met duidelijke formatting styles en in een code blok voor gemakkelijk kopieren.

@@ -7,8 +7,9 @@ Datum: 31 Jan 2026
 ---
 
 ## ✅ LAATST AFGEROND
+- [x] **Mapping Layer:** Fix voor `[object Object]` in database en herstel van broker namen.
+- [x] **Mirror Fix:** Actieve synchronisatie van Unibet data naar BetCity (op basis van correcte configuratie).
 - [x] **Productie-klaar maken:** Volledige synchronisatie tussen Database, Background en UI met professioneel versiebeheer en GitHub backup.
-
 ---
 
 ## 🚀 HUIDIGE FOCUS
@@ -31,6 +32,12 @@ Datum: 31 Jan 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.1.1] - 2026-02-01
+**"The Mapping Patch"**
+- **FIX:** Data Flow Hersteld: Broker-namen en IDs worden nu expliciet als strings verstuurd (voorkomt `broker_name: null` en JSON-in-ID fouten).
+- **FIX:** Mirror Logica: De scanner herkent nu correct de `group` en `isActive` status uit de configuratie, waardoor BetCity weer updates ontvangt.
+- **TECH:** Config Cache Flush: Forceert een schone start bij updates (`onInstalled`) om oude, incomplete configuraties uit `chrome.storage` te wissen.
 
 ### [2.1.0] - 2026-01-31
 **"The Database & Integrity Update"**

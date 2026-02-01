@@ -24,8 +24,9 @@ export const MARKET_TYPE_LABELS: Record<MarketType, string> = {
 
 export type SportFilter = 'all' | 'Voetbal' | 'Tennis';
 
-// --- Navigation Types (NIEUW) ---
-export type AppTab = 'dashboard' | 'promotions' | 'quickscan' | 'resultaten' | 'history' | 'brokers'; 
+// --- Navigation Types ---
+// AANGEPAST: 'quickscan' verwijderd
+export type AppTab = 'dashboard' | 'promotions' | 'resultaten' | 'history' | 'brokers'; 
 
 export interface Broker {
   id: string;
@@ -130,7 +131,6 @@ export const PROMOTION_TYPE_LABELS: Record<PromotionType, string> = {
   [PromotionType.OTHER]: 'Overig',
 };
 
-// Database Row: 'promotions' (Gedeelde Content)
 export interface PromotionDef {
   id: string;
   brokerId: string;
@@ -141,21 +141,16 @@ export interface PromotionDef {
   expiryDate?: string;
   createdAt: string;
   createdBy: string;
-  
-  // Categorisatie
   category?: string;
   league?: string;
   sport?: string;
   type: PromotionType;
-  
-  // Waardes
   minAmount?: number;
   minOdds?: number;
   freebetAmount?: number;
   lastUpdated: string;
 }
 
-// Database Row: 'user_promotions' (Persoonlijke Status)
 export interface UserPromotionStatus {
   userId: string;
   promotionId: string;
@@ -167,18 +162,17 @@ export interface UserPromotionStatus {
   updatedAt: string;
 }
 
-// UI Model: Gecombineerd
 export interface Promotion extends PromotionDef, Omit<UserPromotionStatus, 'userId' | 'promotionId' | 'updatedAt'> {
   isClaimed: boolean;
 }
 
 // --- Odds Scanner Types ---
-// NIEUW: De status van de identificatie
+
 export enum IdentificationStatus {
-  MATCHED = 'matched',       // Groen: Exacte match in DB (Master of Alias)
-  SUGGESTION = 'suggestion', // Oranje: We hebben een sterke vermoeden (Fuzzy match)
-  UNKNOWN = 'unknown',       // Rood: Geen idee, gebruiker moet kiezen
-  NEW = 'new'                // Blauw/Grijs: Gebruiker wil hiervoor een nieuw Master record aanmaken
+  MATCHED = 'matched',
+  SUGGESTION = 'suggestion',
+  UNKNOWN = 'unknown',
+  NEW = 'new'
 }
 
 export interface OddsCapture {
@@ -232,8 +226,6 @@ export interface TeamAlias {
   createdAt: string;
 }
 
-// === NIEUWE SCANNER TYPES (v3.9 - Audit) ===
-
 export interface MatchTimeCandidate {
   eventDate?: string;
   eventTime?: string;
@@ -245,21 +237,14 @@ export interface ScannedMatch {
   league?: string;
   eventDate?: string;
   eventTime?: string;
-  
-  // Display namen (voor UI)
   homeDisplay: string;
   awayDisplay: string;
-  
-  // Genormaliseerde namen (voor ID/TimePicker logica)
   homeNorm: string;
   awayNorm: string;
-  
   marketType: MarketType;
   lastSeenAt: string;
-  
   timeCandidates: MatchTimeCandidate[];
   hasTimeConflict: boolean;
-  
   brokers: Array<{
     brokerId: string;
     brokerName: string;
@@ -267,11 +252,8 @@ export interface ScannedMatch {
     odds: [number, number, number];
     lastSeenAt: string;
   }>;
-  
   best: CalculationResult | null;
 }
-
-// FILE: src/types.ts (Update)
 
 export type ChangeType = 
   | 'FEATURE' 
@@ -292,7 +274,7 @@ export interface ChangelogItem {
   version: string;
   date: string;
   changes: string[]; 
-  detailedChanges?: ChangelogEntry[]; // Voor AI context en toekomstige UI uitbreiding
+  detailedChanges?: ChangelogEntry[];
 }
 
 export interface ManualOutcomeInput {
@@ -300,5 +282,5 @@ export interface ManualOutcomeInput {
   odd: string;
   brokerId: string;
 }
-// EXPORTS
+
 export { formatDateWithLabels, formatTimeAgo } from './utils/date';

@@ -1,10 +1,10 @@
-// FILE: src/background/databaseSchrijver.ts
 import { supabase } from '../lib/supabase';
 import { voegLogToe } from '../utils/storage';
 import { OddsLine } from '../types';
 
 interface OpslagVerzoek {
   brokerId: string;
+  brokerName: string;
   matches: Partial<OddsLine>[];
   sport: string;
   sourceUrl: string;
@@ -13,13 +13,14 @@ interface OpslagVerzoek {
 
 export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
   try {
-    const { brokerId, matches, userId, sport } = verzoek;
+    const { brokerId, brokerName, matches, userId, sport } = verzoek;
 
     if (matches.length === 0) return;
 
-    // 1. Maak Capture Record (De "bon")
+    // 1. Maak Capture Record (Snake Case voor DB)
     const capturePayload = {
         broker_id: brokerId,
+        broker_name: brokerName,
         user_id: userId,
         source: 'Extension',
         sport: sport || 'Onbekend',
@@ -32,14 +33,11 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
       .select('id')
       .single();
 
-    if (captureError) {
-        console.error('❌ Fout bij aanmaken Capture:', JSON.stringify(captureError, null, 2));
-        throw new Error(`Capture Error: ${captureError.message}`);
-    }
+    if (captureError) throw new Error(`Capture Error: ${captureError.message}`);
     
     const captureId = captureData.id;
 
-    // 2. Bereid Lines voor (De "regels")
+    // 2. Bereid Lines voor
     const linesToInsert = matches.map(m => ({
       capture_id: captureId,
       user_id: userId,
@@ -57,37 +55,18 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
       event_url: m.eventUrl || null
     }));
 
-    // 3. Bulk Insert (AANGEPAST: Was upsert)
-    // We gebruiken insert() omdat we net een gloednieuwe capture_id hebben gemaakt.
-    // Conflicten zijn dus onmogelijk.
     const { error: linesError } = await supabase
       .from('odds_lines')
-      .insert(linesToInsert); // GEEN onConflict meer nodig
+      .insert(linesToInsert);
 
-    if (linesError) {
-        console.error('❌ Fout bij opslaan Lines:', JSON.stringify(linesError, null, 2));
-        throw new Error(`Lines Error: ${linesError.message}`);
-    }
+    if (linesError) throw new Error(`Lines Error: ${linesError.message}`);
 
-    // 4. Log succes
-    await voegLogToe(
-        'ACHTERGROND (BREIN)', 
-        'Opslaan', 
-        `Succesvol ${matches.length} rijen toegevoegd voor broker ${brokerId}.`, 
-        null, 
-        'success'
-    );
+    // FIX: Gebruik exacte string 'ACHTERGROND (BREIN)'
+    await voegLogToe('ACHTERGROND (BREIN)', 'Opgeslagen', `${matches.length} matches voor ${brokerName}`, null, 'success');
 
   } catch (error: any) {
-    const errorMsg = error.message || JSON.stringify(error);
-    console.error('💥 FATALE DATABASE FOUT:', errorMsg);
-    
-    await voegLogToe(
-        'ACHTERGROND (BREIN)', 
-        'DB Fout', 
-        'Opslaan mislukt', 
-        { technicalError: errorMsg }, 
-        'error'
-    );
+    console.error('💥 DB FOUT:', error);
+    // FIX: Gebruik exacte string 'ACHTERGROND (BREIN)'
+    await voegLogToe('ACHTERGROND (BREIN)', 'DB Fout', error.message, null, 'error');
   }
 };

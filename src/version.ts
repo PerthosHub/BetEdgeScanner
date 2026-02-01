@@ -8,35 +8,25 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.1.0',
-  date: '2026-01-31',
-  label: 'Modular Beta',
-  status: 'Stable', // Extra status indicator
+  version: '2.1.1',
+  date: '2026-02-01',
+  label: 'Mapping Patch',
+  status: 'Stable',
   detailedChanges: [
     {
-      type: 'REFACTOR' as ChangeType,
-      text: 'Volledige overstap naar modulaire background engine',
-      technicalDetails: 'Gesplitst in Sessie, Config, Verwerking en Database modules voor betere onderhoudbaarheid.'
+      type: 'FIX' as ChangeType,
+      text: 'Data Flow Hersteld',
+      technicalDetails: 'Broker-namen en IDs worden nu expliciet als strings verstuurd (voorkomt `broker_name: null` en JSON-in-ID fouten).'
     },
     {
       type: 'FIX' as ChangeType,
-      text: 'Database synchronisatie hersteld',
-      technicalDetails: 'Veldnamen gesynct met snake_case schema (is_active, group_name) en verplichte user_id toegevoegd.'
+      text: 'Mirror Logica Gerepareerd',
+      technicalDetails: 'De scanner herkent nu correct de `group` en `isActive` status uit de configuratie voor spiegelen.'
     },
     {
-      type: 'FIX' as ChangeType,
-      text: 'Database Schrijffout (42P10) opgelost',
-      technicalDetails: 'Overgestapt van upsert naar insert om unieke constraint errors te voorkomen zonder database wijzigingen.'
-    },
-    {
-      type: 'FEATURE' as ChangeType,
-      text: 'Mirror Strategy geactiveerd',
-      technicalDetails: 'Data wordt nu automatisch gedupliceerd naar andere brokers binnen dezelfde Kambi-groep.'
-    },
-    {
-      type: 'UX' as ChangeType,
-      text: 'Verbeterde Terminal & Versie weergave',
-      technicalDetails: 'Real-time logs in popup en visuele versie-indicator in de header.'
+      type: 'TECH' as ChangeType,
+      text: 'Config Cache Flush',
+      technicalDetails: 'Forceert een opschoning van `chrome.storage` bij update om oude, corrupte configuraties te verwijderen.'
     }
   ]
 };

@@ -129,8 +129,9 @@ function generateContext() {
    console.log(`✅ Structured Outputs = screenshot feitelijk(JSON) in kunnen lezen`);
    console.log(`✅ Code Execution = bijvoorbeeld wiskund of regels tellen`);
    console.log(`❌ Function calling = niet handig voor nu. bv Supabase direct aansturen`);
-   console.log(`✅ Google search = `);
+   console.log(`✅ Google search = Aanzetten`);
    console.log(`☑️ URL Context = handig om bijvoorbeeld toto website te kunnen lezen`);
+   console.log(`👉 Pro vs Flash = Je kan in een chat wisselen, maar gebruik pro voor complexe vragen en code`);
   console.log('================================================================');
 }
 
