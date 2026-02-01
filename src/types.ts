@@ -27,14 +27,13 @@ export type SportFilter = 'all' | 'Voetbal' | 'Tennis';
 // --- Navigation Types (NIEUW) ---
 export type AppTab = 'dashboard' | 'promotions' | 'quickscan' | 'resultaten' | 'history' | 'brokers'; 
 
-// AANGEPAST: Exacte kopie van jouw DB kolommen
 export interface Broker {
   id: string;
   name: string;
   website?: string;
-  group_name: string;  // Was: group
+  group: string;
   notes?: string;
-  is_active: boolean;  // Was: isActive
+  isActive: boolean;
 }
 
 export interface BetSelection {

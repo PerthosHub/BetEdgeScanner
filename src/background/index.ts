@@ -12,13 +12,9 @@ chrome.runtime.onMessage.addListener((
   sendResponse: (response?: any) => void
 ) => {
   if (request.type === 'ODDS_DATA') {
-    // We sturen direct een 'ok' terug zodat de content script niet wacht
-    sendResponse({ status: 'received' });
-    
-    // Start de verwerking asynchroon
-    verwerkInkomendeScan(request.payload).catch((err: any) => {
-        console.error('Kritieke fout in verwerking:', err);
-    });
+    // Verwerk direct, maar stuur direct antwoord om de poort te sluiten
+    verwerkInkomendeScan(request.payload).catch(console.error);
+    sendResponse({ status: 'processing' }); 
   }
-  return true; // Geeft aan dat we asynchroon antwoord kunnen geven (hoewel we dat hier direct doen)
+  return false; // Verander naar false als je niet asynchroon op sendResponse wacht
 });

@@ -1,83 +1,67 @@
 // FILE: scripts/generate_context.cjs
+
+/**
+ * 🛠️ PROJECT CONTEXT GENERATOR (Versie 3.0 - Linked Edition)
+ * 
+ * WAT DOET DIT SCRIPT?
+ * Dit script verzamelt alle verspreide bestanden van je project en bundelt ze 
+ * in één groot tekstbestand: '_PROJECT_CONTEXT_SCANNER.txt'.
+ * 
+ * WAAROM IS DIT SLIM?
+ * In plaats van 20 losse bestanden te uploaden naar AI Studio, upload je er nu 
+ * nog maar één. De AI heeft direct het volledige overzicht van je code, 
+ * je database-regels en je planning.
+ */
+
 const fs = require('fs');
 const path = require('path');
 
-// --- CONFIGURATIE ---
+// --- 1. CONFIGURATIE ---
 const OUTPUT_FILE = '_PROJECT_CONTEXT_SCANNER.txt';
-const ROOT_DIR = path.resolve(__dirname, '..'); // De root van je extensie
-const SRC_DIR = path.join(ROOT_DIR, 'src');
+const ROOT_DIR    = path.resolve(__dirname, '..'); 
+const SRC_DIR     = path.join(ROOT_DIR, 'src');
 
-// Pad naar de "Moeder App" (BetEdgePro) voor type syncing
-const BEP_ROOT = path.resolve(ROOT_DIR, '../../BetEdgePro/BetEdgePro'); 
-const PRO_TYPES_PATH = path.join(BEP_ROOT, 'src/types.ts');
-const LOCAL_TYPES_PATH = path.join(SRC_DIR, 'types.ts');
+// Welke bestandstypen moet de AI kunnen lezen?
+const ALLOWED_EXTENSIONS = ['.ts', '.tsx', '.css', '.json', '.md'];
 
-// Welke extensies willen we uit 'src' hebben?
-const ALLOWED_EXTENSIONS = ['.ts', '.tsx', '.css', '.json'];
-
-// Welke bestanden/mappen moeten we ALTIJD negeren?
+// Bestanden die we NIET naar de AI sturen (om de chat "schoon" te houden)
 const IGNORE_PATTERNS = [
   'vite-env.d.ts', 
   'node_modules',
   'dist',
-  '.DS_Store'
+  '.DS_Store',
+  '_PROJECT_CONTEXT_SCANNER.txt' // Voorkomt dat het script zichzelf inleest
 ];
 
-// Welke specifieke bestanden uit de ROOT moeten erbij?
+/**
+ * 📂 ROOT FILES: De belangrijkste documenten buiten de 'src' map.
+ * Hier leggen we aan de AI uit WAAROM deze bestanden belangrijk zijn.
+ */
 const ROOT_FILES_TO_INCLUDE = [
-  '.cursorrules',
-  '_ECOSYSTEM.md',
-  '_BES_ARCHITECTUUR.md',
-  '_BES_ROADMAP.md',
-  'package.json',
-  'tsconfig.json',
-  'vite.config.ts'
+  '_ECOSYSTEM.md',     // De "Grondwet": Bevat de database velden en business rules.
+  '_BES_ROADMAP.md',   // De "Routekaart": Vertelt de AI wat we al gedaan hebben en wat nog moet.
+  'package.json',      // De "Gereedschapskist": Laat zien welke bibliotheken (libraries) we gebruiken.
+  'tsconfig.json',     // De "Taalregels": Vertelt de computer hoe hij TypeScript moet begrijpen.
+  'vite.config.ts'     // De "Blauwdruk": Bevat de permissies en instellingen van de extensie.
 ];
 
-// DE SYSTEM PROMPT
-const SYSTEM_PROMPT = `
-================================================================================
-!!! SYSTEEM INSTRUCTIE VOOR AI STUDIO / GEMINI !!!
-================================================================================
+// --- 2. HULPFUNCTIES (De motor) ---
 
-ROL & PERSONA:
-Je bent de **Senior Lead Architect** van de "BetEdge Scanner" (Extensie).
-Je assisteert Johan, een visueel ingestelde "Flow Coder".
-
-CONTEXT & DOEL:
-Dit bestand bevat de actuele code van de Scanner EN de gedeelde definities 
-met de hoofd-app (BetEdge Pro). 
-
-HIERARCHIE VAN WAARHEID:
-1. **_ECOSYSTEM.md**: Leidend voor Database Schema's & Relaties.
-2. **src/types.ts**: Leidend voor Datastructuren (Gesynct van Pro App).
-3. **_BES_ARCHITECTUUR.md**: Leidend voor Extensie-specifieke techniek.
-
-⚠️ BELANGRIJK: 
-- De Scanner is de "Slaaf", de Web App is de "Meester". Wij volgen de configuratie.
-- Gebruik Manifest V3 regels (geen persistente variabelen in background).
-
---- EINDE INSTRUCTIE, HIERONDER VOLGT DE CODEBASE ---
-`;
-
-// --- HULPFUNCTIES ---
-
-// Functie om recursief bestanden te zoeken
+/**
+ * Zoekt alle bestanden in de mappen, behalve de negeer-lijst.
+ */
 function getAllFiles(dirPath, arrayOfFiles) {
   const files = fs.readdirSync(dirPath);
-
   arrayOfFiles = arrayOfFiles || [];
 
   files.forEach(function(file) {
     const fullPath = path.join(dirPath, file);
     
-    // Check of we dit moeten negeren
     if (IGNORE_PATTERNS.includes(file)) return;
 
     if (fs.statSync(fullPath).isDirectory()) {
       arrayOfFiles = getAllFiles(fullPath, arrayOfFiles);
     } else {
-      // Check extensie
       const ext = path.extname(file);
       if (ALLOWED_EXTENSIONS.includes(ext)) {
         arrayOfFiles.push(fullPath);
@@ -88,6 +72,9 @@ function getAllFiles(dirPath, arrayOfFiles) {
   return arrayOfFiles;
 }
 
+/**
+ * Leest de tekst uit een bestand veilig uit.
+ */
 function readFileContent(filePath) {
   try {
     if (fs.existsSync(filePath)) {
@@ -99,52 +86,35 @@ function readFileContent(filePath) {
   }
 }
 
-// --- STAP 1: TYPES SYNCHRONISEREN ---
-function syncTypes() {
-  try {
-    console.log('🔄 Types synchroniseren...');
-    if (fs.existsSync(PRO_TYPES_PATH)) {
-      const content = fs.readFileSync(PRO_TYPES_PATH, 'utf8');
-      fs.writeFileSync(LOCAL_TYPES_PATH, content);
-      console.log(`✅ Gesynct: ${path.relative(ROOT_DIR, LOCAL_TYPES_PATH)}`);
-    } else {
-      console.warn(`⚠️  LET OP: Kan bron-types niet vinden op: ${PRO_TYPES_PATH}`);
-      console.warn('   (Dit is geen ramp als je lokaal werkt, maar check je paden)');
-    }
-  } catch (err) {
-    console.error('❌ Fout bij synchroniseren types:', err.message);
-  }
-}
+// --- 3. UITVOERING ---
 
-// --- STAP 2: CONTEXT GENEREREN ---
 function generateContext() {
-  console.log('📂 Context bestand genereren...');
+  console.log('📂 Context bestand voor AI Studio opbouwen...');
   
-  let output = `--- START OF FILE ${OUTPUT_FILE} ---\n\n`;
-  output += SYSTEM_PROMPT;
-  output += `\n\n`;
+  // We beginnen de bundel met een duidelijke start-markering
+  let output = `--- START OF CONTEXT BUNDLE: ${OUTPUT_FILE} ---\n`;
+  output += `Gegenereerd op: ${new Date().toLocaleString()}\n`;
+  output += `Info: types.ts en _ECOSYSTEM.md zijn via Hard Links gesynct met BEP.\n\n`;
 
-  // 1. Verzamel Root Files
+  // A. Bestanden uit de hoofdmap verzamelen
   const rootFilePaths = ROOT_FILES_TO_INCLUDE.map(f => path.join(ROOT_DIR, f));
 
-  // 2. Verzamel Src Files (Recursief)
+  // B. Alle broncode uit de 'src' map verzamelen
   const srcFilePaths = getAllFiles(SRC_DIR);
 
-  // 3. Combineer en sorteer
+  // C. De lijsten samenvoegen
   const allFiles = [...rootFilePaths, ...srcFilePaths];
 
   let fileCount = 0;
 
   allFiles.forEach(fullPath => {
-    // Relatief pad maken voor leesbaarheid (bijv: src/background/index.ts)
     const relativePath = path.relative(ROOT_DIR, fullPath);
     
-    // Header toevoegen
+    // Visuele scheiding per bestand zodat de AI weet waar een nieuw bestand begint
     output += `==================================================\n`;
     output += `FILE: ${relativePath}\n`;
     output += `==================================================\n`;
     
-    // Inhoud toevoegen
     output += readFileContent(fullPath);
     output += `\n\n`;
     fileCount++;
@@ -154,10 +124,15 @@ function generateContext() {
   fs.writeFileSync(outputPath, output);
   
   console.log('================================================================');
-  console.log(`✅ KLAAR! ${fileCount} bestanden gebundeld in: ${OUTPUT_FILE}`);
+  console.log(`✅ KLAAR! ${fileCount} bestanden gebundeld voor AI Studio.`);
+  console.log(`👉 Bestand: ${OUTPUT_FILE}`);
+   console.log(`✅ Structured Outputs = screenshot feitelijk(JSON) in kunnen lezen`);
+   console.log(`✅ Code Execution = bijvoorbeeld wiskund of regels tellen`);
+   console.log(`❌ Function calling = niet handig voor nu. bv Supabase direct aansturen`);
+   console.log(`✅ Google search = `);
+   console.log(`☑️ URL Context = handig om bijvoorbeeld toto website te kunnen lezen`);
   console.log('================================================================');
 }
 
-// --- UITVOEREN ---
-syncTypes();
+// Start het proces
 generateContext();
