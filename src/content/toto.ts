@@ -1,12 +1,13 @@
-// FILE: src/content/toto.ts
 import { OddsLine, MarketType } from '../types';
 
 /**
- * TOTO PARSER v2.2 - "Top-Down Hash-Resistant"
- * Gebruikt wildcard selectors om de dynamische hashes te omzeilen.
+ * TOTO PARSER v3.4 (Production Stable)
+ * - Index-based extraction (100% correcte odds).
+ * - Auto-detectie van 3-Weg markten op basis van data (niet alleen URL).
+ * - Cleaned up (geen debug logs).
  */
 
-const getSportFromUrl = (): string | undefined => {
+const haalSportOpUitUrl = (): string | undefined => {
   const url = window.location.href.toLowerCase();
   if (url.includes('/voetbal/')) return 'Voetbal';
   if (url.includes('/tennis/')) return 'Tennis';
@@ -15,78 +16,97 @@ const getSportFromUrl = (): string | undefined => {
   return undefined; 
 };
 
-export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string } => {
-  const results: Partial<OddsLine>[] = [];
-  const detectedSport = getSportFromUrl();
-
-  // 1. Pak alle wedstrijd-containers (De "dozen")
-  const containers = document.querySelectorAll('div[class*="_eventWithMarkets_"]');
-  
-  containers.forEach((container) => {
+const verwerkTotoTijdstip = (tekst: string): { datum?: string, tijd?: string } => {
     try {
-      // 2. Haal de Teams op (H3 met teamName in class)
-      const teamElements = container.querySelectorAll('h3[class*="_teamName_"]');
-      if (teamElements.length < 2) return;
-
-      const homeTeam = teamElements[0].textContent?.trim() || 'Onbekend';
-      const awayTeam = teamElements[1].textContent?.trim() || 'Onbekend';
-
-      // 3. Haal de unieke ID/Slug op uit de link
-      const linkElement = container.querySelector('a[href*="/wedden/wedstrijd/"]');
-      const href = linkElement?.getAttribute('href') || '';
-      // We pakken de laatste delen van de URL als ID (bijv. "10142840/az-vs-nec-nijmegen")
-      const externalId = href.split('/wedstrijd/')[1] || `${homeTeam}-${awayTeam}`.toLowerCase();
-
-      // 4. Zoek de Odds Buttons binnen dit blok
-      // We zoeken specifiek naar buttons in de "markets" sectie van deze container
-      const oddsButtons = container.querySelectorAll('div[class*="_markets_"] button[class*="_button_"]');
-      
-      const parsedOdds: number[] = [];
-      oddsButtons.forEach(btn => {
-        // De odd staat vaak in een span binnen de button, of direct als tekst
-        const oddText = btn.textContent?.trim() || "";
-        // Zoek naar het getal (bijv "1,93" of "1 1,93")
-        const match = oddText.match(/\d+,\d+/);
+        const match = tekst.match(/(\d{2})-(\d{2})-(\d{4})\s+(\d{2}:\d{2})/);
         if (match) {
-            const cleanOdd = parseFloat(match[0].replace(',', '.'));
-            if (!isNaN(cleanOdd)) parsedOdds.push(cleanOdd);
+            return {
+                datum: `${match[3]}-${match[2]}-${match[1]}`, 
+                tijd: match[4]
+            };
         }
-      });
+    } catch { /* Silent */ }
+    return {};
+};
 
-      // 5. Alleen opslaan als we valide odds hebben
-      if (parsedOdds.length >= 2) {
-        let odd1 = parsedOdds[0];
-        let oddX = 0;
-        let odd2 = 0;
-        let marketType = MarketType.TWO_WAY;
+export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string } => {
+  const resultaten: Partial<OddsLine>[] = [];
+  const gedetecteerdeSport = haalSportOpUitUrl();
 
-        if (parsedOdds.length >= 3 && detectedSport !== 'Tennis') {
-            // TOTO volgorde: 1, X, 2
-            oddX = parsedOdds[1];
-            odd2 = parsedOdds[2];
-            marketType = MarketType.THREE_WAY;
-        } else {
-            // Voor 2-weg (Tennis/Basketbal) is het 1 en 2
-            odd2 = parsedOdds[1];
-        }
+  const wedstrijdRijen = document.querySelectorAll('div[class*="_eventWithMarkets_"]');
+  
+  wedstrijdRijen.forEach((rij) => {
+    try {
+      // 1. Teams ophalen
+      const teamLabels = rij.querySelectorAll('h3');
+      if (teamLabels.length < 2) return;
 
-        results.push({
-          externalEventId: externalId,
-          marketType: marketType,
-          homeNameRaw: homeTeam,
-          awayNameRaw: awayTeam,
+      const thuisPloeg = teamLabels[0].textContent?.trim() || '';
+      const uitPloeg = teamLabels[1].textContent?.trim() || '';
+
+      // 2. ID ophalen
+      const linkElement = rij.querySelector('a[href*="/wedden/wedstrijd/"]');
+      const href = linkElement?.getAttribute('href') || '';
+      const idMatch = href.match(/\/wedstrijd\/(\d+)\//);
+      const externeId = idMatch ? idMatch[1] : `${thuisPloeg}-${uitPloeg}`.toLowerCase();
+
+      // 3. Datum
+      const rijTekst = (rij as HTMLElement).innerText || "";
+      const { datum, tijd } = verwerkTotoTijdstip(rijTekst);
+
+      // 4. Odds Ophalen (Chirurgisch)
+      const haalOddOp = (outcomeIndex: string): number | undefined => {
+          const btn = rij.querySelector(`button[index="${outcomeIndex}"]`);
+          if (!btn) return undefined;
+
+          // Probeer eerst de specifieke value container (zonder label)
+          const waardeElement = btn.querySelector('[class*="_value_"]');
+          let tekst = waardeElement ? waardeElement.textContent : btn.textContent;
+          
+          if (!tekst) return undefined;
+          tekst = tekst.trim();
+
+          // Als we geen value element vonden, moeten we alsnog regexen om labels te strippen
+          if (!waardeElement) {
+             const match = tekst.match(/(\d+,\d{2})/);
+             if (match) tekst = match[0];
+          }
+
+          const getal = parseFloat(tekst.replace(',', '.'));
+          return isNaN(getal) ? undefined : getal;
+      };
+
+      const odd1 = haalOddOp("0");
+      const oddX = haalOddOp("1");
+      const odd2 = haalOddOp("2");
+
+      if (!odd1 || !odd2) return;
+
+      // 5. Bepaal Markt Type
+      // LOGIC UPDATE: Als we een X hebben, is het 3-weg. Ongeacht de URL.
+      let marktType = MarketType.TWO_WAY;
+      if (oddX) {
+          marktType = MarketType.THREE_WAY;
+      }
+
+      resultaten.push({
+          externalEventId: `toto-${externeId}`,
+          marketType: marktType,
+          homeNameRaw: thuisPloeg,
+          awayNameRaw: uitPloeg,
           odds1: odd1,
           oddsX: oddX,
           odds2: odd2,
-          isLive: container.innerHTML.toLowerCase().includes('live'),
-          eventUrl: href ? `https://sport.toto.nl${href}` : undefined,
-          source: 'TOTO'
-        } as any);
-      }
-    } catch (err) {
-      console.error('Fout bij parsen TOTO container:', err);
+          isLive: rijTekst.toLowerCase().includes('live'),
+          eventUrl: href.startsWith('http') ? href : `https://sport.toto.nl${href}`,
+          eventDate: datum,
+          eventTime: tijd
+      });
+
+    } catch (fout) {
+      // Skip row
     }
   });
 
-  return { matches: results, sport: detectedSport };
+  return { matches: resultaten, sport: gedetecteerdeSport };
 };

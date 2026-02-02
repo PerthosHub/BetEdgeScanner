@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.4 (Simplification Update)
-Laatste Update: 01 Feb 2026
+Versie: 3.5 (Expansion Update)
+Laatste Update: 02 Feb 2026
 
 ================================================================================
 📊 SYSTEEM STATUS & VERSIES
@@ -14,7 +14,7 @@ Laatste Update: 01 Feb 2026
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.1.0
+    - VERSIE: v2.2.0
     - STATUS: ✅ Actief & In Sync
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
@@ -40,8 +40,10 @@ Laatste Update: 01 Feb 2026
 │
 ├── 📂 `content/`             # De 'Ogen' - Draait direct op de bookmaker site
 │   ├── 📄 `index.ts`         # Router: Herkent de URL en kiest de juiste scanner.
-│   ├── 📄 `unibet.ts`        # Parser: Specifieke instructies voor Kambi sites.
-│   └── 📄 `toto.ts`          # Parser: Specifieke instructies voor TOTO.
+│   ├── 📄 `unibet.ts`        # Parser: Kambi-engine (Unibet, BetCity, Jack's).
+│   ├── 📄 `toto.ts`          # Parser: TOTO (Index-based engine).
+│   ├── 📄 `circus.ts`        # Parser: Gaming1 (Circus).
+│   └── 📄 `tonybet.ts`       # Parser: SoftLabs (TonyBet).
 │
 ├── 📂 `lib/`                 # Koppelingen: Bevat o.a. de Supabase Client.
 ├── 📂 `utils/`               # Hulptools: Voor tijdnotaties, logs en opslag.
@@ -277,10 +279,12 @@ extra controle voor de AI: komt de code overeen met het verhaal van Johan?
 
 ✅ BES: HUIDIGE STATUS (WAT HET NU DOET)
 --------------------------------------------------------------------------------
-1. **Herkenning:** Bij het bezoeken van een URL (bijv. Unibet.nl) checkt BES in 
-   de lokale configuratie of deze site ondersteund wordt.
-2. **Scanning:** De 'Ogen' lezen de pagina. Momenteel werkt dit volledig voor 
-   Unibet (Kambi-structuur) en experimenteel voor TOTO.
+1. **Herkenning:** De scanner werkt nu op 4 grote platforms:
+   - **Unibet** (en Kambi klonen zoals BetCity, Jack's).
+   - **TOTO** (via stabiele index-selector).
+   - **Circus** (Gaming1 platform).
+   - **TonyBet** (SoftLabs platform).
+2. **Scanning:** De 'Ogen' lezen de pagina en extraheren live 1X2 odds, datums en teamnamen.
 3. **Data Opslag:** Gevonden wedstrijden en odds worden direct als 'Rauwe Data' 
    in Supabase opgeslagen (`odds_captures` & `odds_lines`).
 4. **Mirroring:** Data van Unibet wordt automatisch gekopieerd naar BetCity 
@@ -293,7 +297,7 @@ extra controle voor de AI: komt de code overeen met het verhaal van Johan?
 1. **Universele Detectie:** De scanner herkent automatisch elke goksite die in 
    de database staat, ongeacht de structuur.
 2. **Rijke Data:** Naast namen en odds, haalt de scanner ook slimme context op:
-   - De exacte speeldatum en tijd.
+   - De exacte speeldatum en tijd (Nu actief voor TOTO/Circus/TonyBet).
    - De Sport en Competitie (League).
 3. **Flexibiliteit:** Probleemloze verwerking van zowel 2-Weg (Winst/Verlies) 
    als 3-Weg (Winst/Gelijk/Verlies) markten.

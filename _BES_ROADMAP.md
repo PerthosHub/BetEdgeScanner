@@ -1,12 +1,16 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
-Status: Fase 3d - Stabiliteit & Versiebeheer
-Huidige Versie: 2.1.0
-Datum: 31 Jan 2026
+Status: Fase 4 - Multi-Broker Expansie 🚀
+Huidige Versie: 2.2.0
+Datum: 02 Feb 2026
 
 ---
 
 ## ✅ LAATST AFGEROND
+- [x] **Circus Integratie:** Volledige ondersteuning voor Circus.nl (Gaming1 platform) via stabiele `data-testid` selectors.
+- [x] **TonyBet Integratie:** Parser toegevoegd voor TonyBet via `data-test` attributen.
+- [x] **TOTO 'Bulletproof' Fix:** Oplossing voor het "12,27" odds probleem door overstap naar index-based button selectie.
+- [x] **Router Expansie:** `content/index.ts` herkent nu 4 unieke domeinen en stuurt de juiste parser aan.
 - [x] **Mapping Layer:** Fix voor `[object Object]` in database en herstel van broker namen.
 - [x] **Mirror Fix:** Actieve synchronisatie van Unibet data naar BetCity (op basis van correcte configuratie).
 - [x] **Productie-klaar maken:** Volledige synchronisatie tussen Database, Background en UI met professioneel versiebeheer en GitHub backup.
@@ -19,19 +23,30 @@ Datum: 31 Jan 2026
 *   **Actie:** `index.ts` (de router) opschonen. Zorgen dat elke broker-parser (Unibet, TOTO) een strikt eigen bestand houdt zonder overlap.
 
 ### 2. 🛡️ Data Integriteit & Opschoning
-*   **Doel:** Voorkomen dat "verweesde" odds in de database blijven staan.
-*   **Actie:** Ontwikkelen van een 'cleanup' signaal; als een wedstrijd niet meer in de DOM staat, moet dit gemeld kunnen worden aan de database.
+*   **Doel:** Voorkomen dat "verweesde" odds in de database blijven staan (wedstrijden die afgelopen zijn of verwijderd).
+*   **Actie:** Ontwikkelen van een 'cleanup' signaal of TTL (Time To Live) strategie in de database.
+
+### 2. 🧪 Stabiliteits Monitor
+*   **Doel:** Monitoren hoe de nieuwe parsers zich houden tijdens live wedstrijden en layout veranderingen.
+*   **Actie:** Feedback loops controleren in de `Terminal` logs.
 
 ---
 
 ## 🔮 BACKLOG (TOEKOMST)
-- [ ] **Live Detectie:** Herkennen van 'LIVE' badges voor aparte filtering.
+- [ ] **Live Detectie:** Herkennen van 'LIVE' badges voor aparte filtering (nu filteren we ze hard weg).
 - [ ] **Error Recovery:** Automatisch herladen van gecrashte of bevroren tabbladen.
 - [ ] **Multi-Tab Orchestration:** Voorkomen dat meerdere open tabs van dezelfde broker tegelijk schrijven.
 
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.2.0] - 2026-02-02
+**"The Expansion Pack"**
+- **FEAT:** **Circus Parser:** Toegevoegd met ondersteuning voor Prematch filtering via `data-testid="event-summary-prematch"`.
+- **FEAT:** **TonyBet Parser:** Toegevoegd met ondersteuning voor datum-parsing en odds-extractie.
+- **FIX:** **TOTO Parser:** Herschreven naar v3.4. Gebruikt nu `button[index="0"]` selector om te voorkomen dat labels ("1") en odds ("2,27") aan elkaar geplakt worden (`textContent` bug). Tevens 3-Weg detectie verbeterd.
+- **TECH:** **Manifest Update:** Permissies uitgebreid naar `*.circus.nl` en `*.tonybet.nl`.
 
 ### [2.1.1] - 2026-02-01
 **"The Mapping Patch"**
