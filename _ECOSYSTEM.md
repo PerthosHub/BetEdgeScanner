@@ -13,9 +13,8 @@ Laatste Update: 02 Feb 2026
     - STATUS: ✅ Actief & In Sync
 
 🅱️  **APP: BetEdge Scanner (BES)**
-    - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.2.0
-    - STATUS: ✅ Actief & In Sync
+    - VERSIE: v2.3.0 (Flight Tower Update)
+    - STATUS: 🚀 Live Monitoring Actief
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -37,6 +36,11 @@ Laatste Update: 02 Feb 2026
 │   ├── 📄 `configuratie.ts`  # Instellingen: Haalt broker-lijst op uit de database.
 │   ├── 📄 `scanVerwerker.ts` # Logica: Coördineert data & Mirror Strategy.
 │   └── 📄 `database.ts`      # Schrijver: Verantwoordelijk voor de SQL inserts.
+│   ├── 📄 `logCentrum.ts`    # NIEUW: Radio-station voor live monitoring.
+│
+├── 📂 `monitor/`             # NIEUW: De 'Flight Tower' UI (React Tab).
+│   ├── 📄 `monitor.html`
+│   └── 📄 `App.tsx`
 │
 ├── 📂 `content/`             # De 'Ogen' - Draait direct op de bookmaker site
 │   ├── 📄 `index.ts`         # Router: Herkent de URL en kiest de juiste scanner.
@@ -46,9 +50,14 @@ Laatste Update: 02 Feb 2026
 │   └── 📄 `tonybet.ts`       # Parser: SoftLabs (TonyBet).
 │
 ├── 📂 `lib/`                 # Koppelingen: Bevat o.a. de Supabase Client.
-├── 📂 `utils/`               # Hulptools: Voor tijdnotaties, logs en opslag.
+├── 📂 `utils/`               # Hulptools: Voor tijdnotaties, logs en opslag.         
+│   ├── 📄 `logger.ts`        # NIEUW: Verstuurt logs naar het Brein.
+│   └── 📄 `storage.ts`       # Alleen voor permanente audit-logs.
+│
 ├── 📄 `types.ts`             # Definities: De gedeelde taal tussen BEP en BES.
 └── 📄 `version.ts`           # Versiebeheer: De 'Single Source of Truth' voor de versie.
+
+
 
 ### 🔵 1B. BETEDGE PRO (BEP)
 *Doel: Data visualiseren, rekenen en administratie.*
@@ -105,6 +114,10 @@ Bevat de algemene informatie over het moment van scannen.
 - `sport`        : De categorie (bijv. 'Voetbal', 'Tennis').
 - `captured_at`  : Exacte tijdstip van opslag.
 - `user_id`      : ID van de scanner-account (voor audit-doeleinden).
+- `last_seen_at` : [NIEUW] Timestamp van de laatste hartslag (ververs-indicator).
+
+
+
 
 **Tabel: `odds_lines` (De Wedstrijdgegevens / Kind)**
 Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.

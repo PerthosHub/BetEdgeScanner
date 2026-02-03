@@ -1,3 +1,4 @@
+// FILE: vite.config.ts (BES)
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
@@ -36,6 +37,15 @@ export default defineConfig({
     react(),
     crx({ manifest }),
   ],
+  build: {
+    rollupOptions: {
+      input: {
+        // Zorgt dat Vite beide HTML bestanden herkent en bouwt
+        popup: 'index.html',
+        monitor: 'src/monitor/monitor.html'
+      },
+    },
+  },
   server: {
     port: 5173,
     strictPort: true,

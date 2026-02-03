@@ -1,26 +1,18 @@
-import { OddsLine, MarketType } from '../types';
+// FILE: src/content/circus.ts
+import { OddsLine } from '../types';
+import { bepaalSportUitUrl, parseOddWaarde, genereerWedstrijdId, bepaalMarktType } from './utils';
 
 /**
  * CIRCUS PARSER (Gaming1)
- * Versie: 2.2 (Data-TestID Edition)
- * Gebaseerd op DOM-inspectie (01 Feb 2026).
+ * Versie: 2.4 (Export Fix & Utils Integration)
  */
-
-const getSportFromUrl = (): string | undefined => {
-  const url = window.location.href.toLowerCase();
-  if (url.includes('voetbal')) return 'Voetbal';
-  if (url.includes('tennis')) return 'Tennis';
-  if (url.includes('darts')) return 'Darts';
-  if (url.includes('basketbal')) return 'Basketbal';
-  return undefined; 
-};
 
 // Helper: 06/02 -> 2026-02-06
 const parseCircusDate = (dateStr: string): string => {
     try {
         const [day, month] = dateStr.split('/').map(Number);
         const currentYear = new Date().getFullYear();
-        // Simpele logica: als maand < huidige maand, is het waarschijnlijk volgend jaar.
+        // Simpele logica: als maand kleiner is dan huidige maand, is het volgend jaar? 
         // Voor nu houden we het simpel op huidig jaar.
         return `${currentYear}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     } catch {
@@ -28,24 +20,21 @@ const parseCircusDate = (dateStr: string): string => {
     }
 };
 
+// 🛠️ FIX: 'export' toegevoegd zodat index.ts deze functie kan vinden
 export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: string } => {
   const results: Partial<OddsLine>[] = [];
-  const detectedSport = getSportFromUrl();
+  
+  // STAP 1: Sport via Utils
+  const detectedSport = bepaalSportUitUrl();
 
-  // 1. We zoeken alle PREMATCH containers direct.
-  // Dit is de veiligste filter dankzij jouw screenshot!
-  // We negeren 'event-summary-live' volledig.
+  // Zoek naar de standaard wedstrijd-blokken (lijstweergave)
   const matchRows = document.querySelectorAll('div[data-testid="event-summary-prematch"]'); 
 
   matchRows.forEach((row) => {
       try {
-          // 2. Namen ophalen
-          // We zoeken de container met de namen
           const nameContainer = row.querySelector('[data-testid="event-summary-name"]');
           if (!nameContainer) return;
 
-          // Truc: innerText pakt de tekst met regeleindes (\n) tussen blok-elementen (divs).
-          // Jouw screenshot toont dat de namen in aparte divs staan, dus dit werkt perfect.
           const rawText = (nameContainer as HTMLElement).innerText || ""; 
           const lines = rawText.split('\n').map(l => l.trim()).filter(l => l.length > 1);
 
@@ -54,43 +43,33 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
           const homeTeam = lines[0];
           const awayTeam = lines[1];
 
-          // 3. Datum & Tijd ophalen
-          // De datum staat vaak ergens anders in de rij, als platte tekst.
+          // Datum & Tijd ophalen uit de tekst van de rij
           const rowText = (row as HTMLElement).innerText || "";
-          
-          // Regex voor "06/02 20:00"
           const dateMatch = rowText.match(/(\d{2}\/\d{2})/);
           const timeMatch = rowText.match(/(\d{2}:\d{2})/);
-          
           const isoDate = dateMatch ? parseCircusDate(dateMatch[0]) : undefined;
           const eventTime = timeMatch ? timeMatch[0] : undefined;
 
-          // 4. Odds verzamelen
-          // We zoeken knoppen BINNEN deze specifieke rij
+          // Odds verzamelen
           const oddButtons = row.querySelectorAll('button[data-testid="outcome-summary"]');
           const oddsValues: number[] = [];
 
           oddButtons.forEach(btn => {
-              const val = parseFloat(btn.textContent?.trim() || '0');
+              // STAP 2: Conversie via Utils
+              const val = parseOddWaarde(btn.textContent);
               if (val > 1) oddsValues.push(val);
           });
 
           if (oddsValues.length < 2) return;
 
-          // 5. Data Samenstellen
-          const cleanID = `${homeTeam.replace(/\s/g, '')}-${awayTeam.replace(/\s/g, '')}`.toLowerCase();
+          // STAP 3: ID & Markt via Utils
+          const cleanID = genereerWedstrijdId(homeTeam, awayTeam);
+          const marketType = bepaalMarktType(oddsValues.length, detectedSport);
 
-          let marketType = MarketType.TWO_WAY;
-          let o1 = oddsValues[0];
-          let oX = undefined;
-          let o2 = oddsValues[1];
-
-          // Als we 3 odds hebben, is het 3-Weg (1X2)
-          if (oddsValues.length >= 3) {
-              marketType = MarketType.THREE_WAY;
-              oX = oddsValues[1];
-              o2 = oddsValues[2];
-          }
+          const o1 = oddsValues[0];
+          const oX = oddsValues.length >= 3 ? oddsValues[1] : undefined;
+          // Bij 2-weg is de 2e waarde de uit-odd, bij 3-weg de 3e waarde
+          const o2 = oddsValues.length >= 3 ? oddsValues[2] : oddsValues[1];
 
           results.push({
               externalEventId: `circus-${cleanID}`,
@@ -100,13 +79,13 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
               odds1: o1,
               oddsX: oX,
               odds2: o2,
-              isLive: false, // We pakken alleen prematch containers
+              isLive: false, 
               eventDate: isoDate,
               eventTime: eventTime
           });
 
       } catch (e) {
-          // Skip row on error
+          // Silent fail bij parse errors in een rij
       }
   });
 

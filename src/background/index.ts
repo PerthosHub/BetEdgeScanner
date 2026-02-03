@@ -1,25 +1,44 @@
+// FILE: src/background/index.ts
 /// <reference types="chrome" />
 
-import { verwerkInkomendeScan } from './scanVerwerker';
+import { verwerkInkomendeScan, verwerkHartslag } from './scanVerwerker';
+import { setupLogCentrum, verwerkLogBericht } from './logCentrum'; // <-- NIEUW
 
-console.log('🤖 BetEdge Brein: Actief (Modulair v2.1)');
+console.log('🤖 BetEdge Brein: Actief (Heartbeat v2.3)');
 
-// NIEUW: Luister naar installatie/update events en wis de cache
+// Start de 'Radio Zender' voor de monitor
+setupLogCentrum(); // <-- NIEUW
+
 chrome.runtime.onInstalled.addListener(() => {
-    console.log("🧹 Update gedetecteerd: Opslag wissen voor schone configuratie...");
+    console.log("🧹 Update gedetecteerd: Opslag wissen...");
     chrome.storage.local.clear(() => {
-        console.log("✅ Opslag gewist. Nieuwe broker-configuratie wordt opgehaald bij volgende scan.");
+        console.log("✅ Opslag gewist voor schone start.");
     });
 });
 
 chrome.runtime.onMessage.addListener((
   request: any, 
-  _sender: chrome.runtime.MessageSender, 
+  sender: chrome.runtime.MessageSender, // <-- NIEUW: 'sender' toegevoegd
   sendResponse: (response?: any) => void
 ) => {
+  
+  // ROUTE 1: Nieuwe Data (Insert)
   if (request.type === 'ODDS_DATA') {
     verwerkInkomendeScan(request.payload).catch(console.error);
-    sendResponse({ status: 'processing' }); 
+    sendResponse({ status: 'processing_data' }); 
   }
+  
+  // ROUTE 2: Hartslag (Update)
+  else if (request.type === 'HEARTBEAT') {
+    verwerkHartslag(request.payload).catch(console.error);
+    sendResponse({ status: 'processing_heartbeat' });
+  }
+
+  // ROUTE 3: Logboek (NIEUW)
+  else if (request.type === 'LOG_ENTRY') {
+      verwerkLogBericht(request.payload, sender);
+      sendResponse({ status: 'logged' });
+  }
+
   return false;
 });

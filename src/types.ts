@@ -277,6 +277,7 @@ export interface ChangelogItem {
   detailedChanges?: ChangelogEntry[];
 }
 
+// FILE: src/types.ts
 export interface ManualOutcomeInput {
   label: string;
   odd: string;
@@ -284,3 +285,35 @@ export interface ManualOutcomeInput {
 }
 
 export { formatDateWithLabels, formatTimeAgo } from './utils/date';
+
+// --- Messaging Types (NIEUW) ---
+
+export interface ScanPayload {
+  url: string;
+  sport?: string;
+  matches: any[]; 
+  totaalGevonden: number;
+}
+
+export interface HeartbeatPayload {
+  url: string;
+  timestamp: number;
+}
+
+
+export type MessageType = 'ODDS_DATA' | 'HEARTBEAT' | 'LOG_ENTRY';
+
+export type LogNiveau = 'TRACE' | 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR';
+
+export interface LogBericht {
+  id: string;
+  tijdstempel: number;
+  niveau: LogNiveau;
+  bron: {
+    tabId?: number;
+    url: string;
+  };
+  actie: string;
+  bericht: string;
+  meta?: any;
+}

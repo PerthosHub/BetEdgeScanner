@@ -1,12 +1,18 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
-Status: Fase 4 - Multi-Broker Expansie 🚀
-Huidige Versie: 2.2.0
-Datum: 02 Feb 2026
+Status: Fase 4 - Multi-Broker & Monitoring 🚀
+Huidige Versie: 2.3.0
+Datum: 03 Feb 2026
 
 ---
 
 ## ✅ LAATST AFGEROND
+ [x] **v2.3.0: Flight Tower:** Live monitoring tabblad (`monitor.html`) toegevoegd voor real-time debugging zonder console-logs.
+- [x] **v2.3.0: Heartbeat Protocol:** Database updates via `last_seen_at` om data-versheid te garanderen in BEP.
+- [x] **v2.2.1: Stealth Mode:** Alle visuele indicatoren (groene randen) en publieke console.logs verwijderd.
+- [x] **v2.2.0: Multi-Broker:** Circus & TonyBet parsers volledig operationeel.
+- [x] **v2.1.0: Refactor:** `src/content/utils.ts` geïntroduceerd voor gedeelde parser-logica.
+
 - [x] **Circus Integratie:** Volledige ondersteuning voor Circus.nl (Gaming1 platform) via stabiele `data-testid` selectors.
 - [x] **TonyBet Integratie:** Parser toegevoegd voor TonyBet via `data-test` attributen.
 - [x] **TOTO 'Bulletproof' Fix:** Oplossing voor het "12,27" odds probleem door overstap naar index-based button selectie.
@@ -18,9 +24,14 @@ Datum: 02 Feb 2026
 
 ## 🚀 HUIDIGE FOCUS
 
-### 1. 🛠️ Content Script Refactor (De "Ogen")
-*   **Doel:** Dezelfde modulariteit als in de background toepassen op de content scripts.
-*   **Actie:** `index.ts` (de router) opschonen. Zorgen dat elke broker-parser (Unibet, TOTO) een strikt eigen bestand houdt zonder overlap.
+### 1. 🛡️ Stabiliteit van de Flight Tower
+*   **Doel:** Zorgen dat de live-stream niet crasht bij zeer hoge scan-frequenties (bijv. 100+ matches).
+*   **Actie:** Testen van de `Set<Port>` logica in `logCentrum.ts`.
+
+### 2. 📉 Performance Monitoring
+*   **Doel:** Meten of de `MutationObserver` op zware pagina's (zoals de Circus homepage) te veel CPU verbruikt.
+*   **Actie:** TRACE logs analyseren op "Scan Idle" loops.
+
 
 ### 2. 🛡️ Data Integriteit & Opschoning
 *   **Doel:** Voorkomen dat "verweesde" odds in de database blijven staan (wedstrijden die afgelopen zijn of verwijderd).
@@ -28,7 +39,7 @@ Datum: 02 Feb 2026
 
 ### 2. 🧪 Stabiliteits Monitor
 *   **Doel:** Monitoren hoe de nieuwe parsers zich houden tijdens live wedstrijden en layout veranderingen.
-*   **Actie:** Feedback loops controleren in de `Terminal` logs.
+
 
 ---
 
@@ -37,9 +48,22 @@ Datum: 02 Feb 2026
 - [ ] **Error Recovery:** Automatisch herladen van gecrashte of bevroren tabbladen.
 - [ ] **Multi-Tab Orchestration:** Voorkomen dat meerdere open tabs van dezelfde broker tegelijk schrijven.
 
+- [ ] **Remote Config:** Mogelijkheid om parsers te updaten zonder de extensie opnieuw te hoeven builden.
+- [ ] **Visual Diff Highlighter:** In de Monitor pagina specifiek laten zien *welke* odd precies veranderde (bijv. "Ajax 1.8 -> 1.85" in kleur).
+- [ ] **Auto-Cleanup:** Background script triggeren om database records ouder dan 24u op te ruimen.
+
+
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.3.0] - 2026-02-03
+**"The Flight Tower Update"**
+- **FEAT:** **Monitor Tab:** Nieuwe UI op `src/monitor/monitor.html` toont live logs van alle tabs.
+- **FEAT:** **Broadcasting:** Background script fungeert nu als radio-hub tussen Content en Monitor.
+- **FEAT:** **Heartbeat:** Verstuurt elke 30s een teken van leven naar Supabase voor actieve sessies.
+- **FIX:** **Stealth Mode:** Volledige verwijdering van CSS borders en console-vervuiling.
+- **TECH:** **Vite Config:** Multi-input build toegevoegd voor popup en monitor.
 
 ### [2.2.0] - 2026-02-02
 **"The Expansion Pack"**

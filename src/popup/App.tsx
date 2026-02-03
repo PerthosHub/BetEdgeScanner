@@ -28,7 +28,6 @@ const App = () => {
     return () => clearInterval(interval);
   }, []);
 
-  // UI: Helper voor kleurcodering
   const krijgKleur = (type: string) => {
     switch (type) {
         case 'success': return 'text-green-400 border-green-900 bg-green-900/20';
@@ -38,27 +37,35 @@ const App = () => {
     }
   };
 
-  return (
-    <div className="w-[450px] bg-slate-900 text-slate-200 p-4 font-mono text-sm min-h-[500px]">
-      {/* HEADER */}
-      <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
-        <div>
-            <h1 className="text-lg font-bold text-emerald-400">BetEdge Scanner</h1>
+    // NIEUW: Functie om monitor te openen
+    const openMonitor = () => {
+      chrome.tabs.create({ url: 'src/monitor/monitor.html' });
+    };
+
+    return (
+      <div className="w-[450px] bg-slate-900 text-slate-200 p-4 font-mono text-sm min-h-[500px]">
+        {/* HEADER */}
+        <div className="flex justify-between items-center mb-4 border-b border-slate-700 pb-2">
+          <div>
+              <h1 className="text-lg font-bold text-emerald-400">BetEdge Scanner</h1>
             <div className="flex gap-2 items-center">
                 <span className="text-[10px] text-slate-500 font-mono">v{VERSION_INFO.version}</span>
                 <span className="text-[9px] px-1 bg-slate-800 text-slate-400 rounded border border-slate-700">{VERSION_INFO.label}</span>
             </div>
-        </div>
+            </div>
         <div className="flex gap-2">
+            {/* NIEUW: Knopje voor Monitor (Icoontje of Tekst) */}
+            <button 
+                onClick={openMonitor}
+                className="px-2 py-1 rounded bg-slate-800 text-emerald-400 hover:bg-slate-700 border border-slate-700"
+                title="Open Flight Tower"
+            >
+                📡 Monitor
+            </button>
+
             <button 
                 onClick={() => setActieveTab('dashboard')}
                 className={`px-2 py-1 rounded ${actieveTab === 'dashboard' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}`}
-            >
-                Dashboard
-            </button>
-            <button 
-                onClick={() => setActieveTab('terminal')}
-                className={`px-2 py-1 rounded ${actieveTab === 'terminal' ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-400'}`}
             >
                 Terminal
             </button>

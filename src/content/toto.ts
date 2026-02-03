@@ -1,20 +1,12 @@
-import { OddsLine, MarketType } from '../types';
+// FILE: src/content/toto.ts
+import { OddsLine } from '../types';
+import { bepaalSportUitUrl, parseOddWaarde, genereerWedstrijdId, bepaalMarktType } from './utils';
 
 /**
- * TOTO PARSER v3.4 (Production Stable)
- * - Index-based extraction (100% correcte odds).
- * - Auto-detectie van 3-Weg markten op basis van data (niet alleen URL).
- * - Cleaned up (geen debug logs).
+ * TOTO PARSER v3.5 (Refactored)
+ * - Uses shared utils for stability
+ * - Keeps unique index-based button selection
  */
-
-const haalSportOpUitUrl = (): string | undefined => {
-  const url = window.location.href.toLowerCase();
-  if (url.includes('/voetbal/')) return 'Voetbal';
-  if (url.includes('/tennis/')) return 'Tennis';
-  if (url.includes('/darts/')) return 'Darts';
-  if (url.includes('/basketbal/')) return 'Basketbal';
-  return undefined; 
-};
 
 const verwerkTotoTijdstip = (tekst: string): { datum?: string, tijd?: string } => {
     try {
@@ -31,49 +23,37 @@ const verwerkTotoTijdstip = (tekst: string): { datum?: string, tijd?: string } =
 
 export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string } => {
   const resultaten: Partial<OddsLine>[] = [];
-  const gedetecteerdeSport = haalSportOpUitUrl();
+  
+  // STAP 1: Sport via Utils
+  const gedetecteerdeSport = bepaalSportUitUrl();
 
   const wedstrijdRijen = document.querySelectorAll('div[class*="_eventWithMarkets_"]');
   
   wedstrijdRijen.forEach((rij) => {
     try {
-      // 1. Teams ophalen
       const teamLabels = rij.querySelectorAll('h3');
       if (teamLabels.length < 2) return;
 
       const thuisPloeg = teamLabels[0].textContent?.trim() || '';
       const uitPloeg = teamLabels[1].textContent?.trim() || '';
 
-      // 2. ID ophalen
       const linkElement = rij.querySelector('a[href*="/wedden/wedstrijd/"]');
       const href = linkElement?.getAttribute('href') || '';
-      const idMatch = href.match(/\/wedstrijd\/(\d+)\//);
-      const externeId = idMatch ? idMatch[1] : `${thuisPloeg}-${uitPloeg}`.toLowerCase();
-
-      // 3. Datum
+      
       const rijTekst = (rij as HTMLElement).innerText || "";
       const { datum, tijd } = verwerkTotoTijdstip(rijTekst);
 
-      // 4. Odds Ophalen (Chirurgisch)
+      // 4. Odds Ophalen (Specifiek voor TOTO via buttons)
       const haalOddOp = (outcomeIndex: string): number | undefined => {
           const btn = rij.querySelector(`button[index="${outcomeIndex}"]`);
           if (!btn) return undefined;
 
-          // Probeer eerst de specifieke value container (zonder label)
+          // Probeer value container of fallback naar button text
           const waardeElement = btn.querySelector('[class*="_value_"]');
-          let tekst = waardeElement ? waardeElement.textContent : btn.textContent;
+          const ruweTekst = waardeElement ? waardeElement.textContent : btn.textContent;
           
-          if (!tekst) return undefined;
-          tekst = tekst.trim();
-
-          // Als we geen value element vonden, moeten we alsnog regexen om labels te strippen
-          if (!waardeElement) {
-             const match = tekst.match(/(\d+,\d{2})/);
-             if (match) tekst = match[0];
-          }
-
-          const getal = parseFloat(tekst.replace(',', '.'));
-          return isNaN(getal) ? undefined : getal;
+          // STAP 2: Conversie via Utils
+          return parseOddWaarde(ruweTekst);
       };
 
       const odd1 = haalOddOp("0");
@@ -82,12 +62,18 @@ export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string 
 
       if (!odd1 || !odd2) return;
 
-      // 5. Bepaal Markt Type
-      // LOGIC UPDATE: Als we een X hebben, is het 3-weg. Ongeacht de URL.
-      let marktType = MarketType.TWO_WAY;
-      if (oddX) {
-          marktType = MarketType.THREE_WAY;
-      }
+      // STAP 3: Markt Type via Utils
+      // Let op: Bij Toto geeft haalOddOp 'undefined' terug als oddX niet bestaat, 
+      // dus we tellen handmatig hoeveel odds we hebben.
+      const aantalOdds = oddX ? 3 : 2;
+      const marktType = bepaalMarktType(aantalOdds, gedetecteerdeSport);
+
+      // STAP 4: ID via Utils (of fallback naar TOTO ID uit URL)
+      const idMatch = href.match(/\/wedstrijd\/(\d+)\//);
+      // We geven voorkeur aan onze generieke ID generator voor consistentie, 
+      // tenzij je perse de TOTO numeric ID wilt behouden. 
+      // Voor nu gebruiken we de generieke generator zodat 'Ajax - Feyenoord' overal hetzelfde ID krijgt.
+      const externeId = genereerWedstrijdId(thuisPloeg, uitPloeg);
 
       resultaten.push({
           externalEventId: `toto-${externeId}`,

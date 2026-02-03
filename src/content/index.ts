@@ -1,39 +1,40 @@
+// FILE: src/content/index.ts
 import { parseUnibetPage } from './unibet';
 import { parseTotoPage } from './toto';
 import { parseCircusPage } from './circus';
-import { parseTonyBetPage } from './tonybet'; // <-- NIEUW
-import { voegLogToe } from '../utils/storage';
+import { parseTonyBetPage } from './tonybet';
+import { stuurLog } from '../utils/logger'; // <-- NIEUW
 
-console.log('👀 BetEdge Scanner: Ogen Geopend');
-voegLogToe('CONTENT (DOM)', 'Script Geladen', 'De ogen zijn geopend op deze pagina.', null, 'info');
+// STEALTH MODE: Start log (Alleen intern zichtbaar)
+stuurLog('INFO', 'Script Gestart', 'Content script geladen op pagina.', { url: window.location.href });
 
+// STATUS & STATE
 const laatstBekendeOdds = new Map<string, string>();
 let scanTimeout: number | undefined;
+let laatsteBerichtTijd = Date.now(); 
 
 const voerParserUit = () => {
   const url = window.location.href;
   
-  if (url.includes('toto.nl')) {
-    return parseTotoPage();
-  } else if (url.includes('circus.nl')) {
-    return parseCircusPage();
-  } else if (url.includes('tonybet')) { // <-- NIEUW
-    return parseTonyBetPage();
-  } else {
-    return parseUnibetPage();
-  }
+  if (url.includes('toto.nl')) return parseTotoPage();
+  if (url.includes('circus.nl')) return parseCircusPage();
+  if (url.includes('tonybet')) return parseTonyBetPage();
+  return parseUnibetPage();
 };
 
 const startScanRonde = () => {
-  // Visuele feedback
-  document.body.style.border = "4px solid #10b981"; 
-
   const { matches: alleWedstrijden, sport } = voerParserUit();
+  const nu = Date.now();
   
-  if (alleWedstrijden.length === 0) return; 
+  // TRACE LOGGING: Zie waarom er niets gebeurt
+  if (alleWedstrijden.length === 0) {
+      stuurLog('TRACE', 'Geen Matches', 'Parser uitgevoerd, maar 0 resultaten.', { sport, url: window.location.href });
+      return; 
+  }
 
   const gewijzigdeWedstrijden: any[] = [];
 
+  // 1. Check op wijzigingen (Diffing)
   alleWedstrijden.forEach((wedstrijd: any) => {
     const id = wedstrijd.externalEventId;
     const vingerafdruk = `${wedstrijd.odds1}-${wedstrijd.oddsX}-${wedstrijd.odds2}`;
@@ -44,16 +45,10 @@ const startScanRonde = () => {
     }
   });
   
+  // SCENARIO A: NIEUWS (Direct versturen)
   if (gewijzigdeWedstrijden.length > 0) {
-    voegLogToe(
-        'CONTENT (DOM)', 
-        'Wijzigingen Gedetecteerd', 
-        `${gewijzigdeWedstrijden.length} wedstrijden zijn veranderd (of nieuw).`,
-        { detectedSport: sport, source: (alleWedstrijden[0] as any).source, sample: gewijzigdeWedstrijden[0] },
-        'info'
-    );
-
-    console.log(`⚡ ${gewijzigdeWedstrijden.length} wijzigingen gevonden. Versturen...`);
+    // Loggen via centrale (zichtbaar in monitor)
+    stuurLog('SUCCESS', 'Wijzigingen Gevonden', `${gewijzigdeWedstrijden.length} nieuwe odds gevonden.`, { count: gewijzigdeWedstrijden.length });
 
     chrome.runtime.sendMessage({ 
       type: 'ODDS_DATA', 
@@ -63,13 +58,33 @@ const startScanRonde = () => {
           matches: gewijzigdeWedstrijden,
           totaalGevonden: alleWedstrijden.length 
       }
-  });
+    });
+
+    laatsteBerichtTijd = nu; 
+  } 
+  
+  // SCENARIO B: STILTE (Hartslag checken)
+  else if ((nu - laatsteBerichtTijd) > 30000) {
+      stuurLog('INFO', 'Hartslag', 'Geen wijzigingen, stuur keep-alive.', { matchesInMem: alleWedstrijden.length });
+      
+      chrome.runtime.sendMessage({
+          type: 'HEARTBEAT',
+          payload: {
+              url: window.location.href,
+              timestamp: nu
+          }
+      });
+
+      laatsteBerichtTijd = nu; 
+  } else {
+      // Trace voor "Wel matches, maar geen wijziging"
+      stuurLog('TRACE', 'Scan Idle', 'Matches gecheckt, geen wijzigingen.', { count: alleWedstrijden.length });
   }
 };
 
 const observer = new MutationObserver(() => {
   clearTimeout(scanTimeout);
-  scanTimeout = setTimeout(startScanRonde, 2000);
+  scanTimeout = setTimeout(startScanRonde, 2000); 
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
