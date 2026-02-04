@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.5 (Expansion Update)
-Laatste Update: 02 Feb 2026
+Versie: 3.4 (Simplification Update)
+Laatste Update: 01 Feb 2026
 
 ================================================================================
 📊 SYSTEEM STATUS & VERSIES
@@ -13,8 +13,9 @@ Laatste Update: 02 Feb 2026
     - STATUS: ✅ Actief & In Sync
 
 🅱️  **APP: BetEdge Scanner (BES)**
-    - VERSIE: v2.3.0 (Flight Tower Update)
-    - STATUS: 🚀 Live Monitoring Actief
+    - TYPE:   Browser Extensie (De Leverancier)
+    - VERSIE: v2.1.0
+    - STATUS: ✅ Actief & In Sync
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -36,28 +37,16 @@ Laatste Update: 02 Feb 2026
 │   ├── 📄 `configuratie.ts`  # Instellingen: Haalt broker-lijst op uit de database.
 │   ├── 📄 `scanVerwerker.ts` # Logica: Coördineert data & Mirror Strategy.
 │   └── 📄 `database.ts`      # Schrijver: Verantwoordelijk voor de SQL inserts.
-│   ├── 📄 `logCentrum.ts`    # NIEUW: Radio-station voor live monitoring.
-│
-├── 📂 `monitor/`             # NIEUW: De 'Flight Tower' UI (React Tab).
-│   ├── 📄 `monitor.html`
-│   └── 📄 `App.tsx`
 │
 ├── 📂 `content/`             # De 'Ogen' - Draait direct op de bookmaker site
 │   ├── 📄 `index.ts`         # Router: Herkent de URL en kiest de juiste scanner.
-│   ├── 📄 `unibet.ts`        # Parser: Kambi-engine (Unibet, BetCity, Jack's).
-│   ├── 📄 `toto.ts`          # Parser: TOTO (Index-based engine).
-│   ├── 📄 `circus.ts`        # Parser: Gaming1 (Circus).
-│   └── 📄 `tonybet.ts`       # Parser: SoftLabs (TonyBet).
+│   ├── 📄 `unibet.ts`        # Parser: Specifieke instructies voor Kambi sites.
+│   └── 📄 `toto.ts`          # Parser: Specifieke instructies voor TOTO.
 │
 ├── 📂 `lib/`                 # Koppelingen: Bevat o.a. de Supabase Client.
-├── 📂 `utils/`               # Hulptools: Voor tijdnotaties, logs en opslag.         
-│   ├── 📄 `logger.ts`        # NIEUW: Verstuurt logs naar het Brein.
-│   └── 📄 `storage.ts`       # Alleen voor permanente audit-logs.
-│
+├── 📂 `utils/`               # Hulptools: Voor tijdnotaties, logs en opslag.
 ├── 📄 `types.ts`             # Definities: De gedeelde taal tussen BEP en BES.
 └── 📄 `version.ts`           # Versiebeheer: De 'Single Source of Truth' voor de versie.
-
-
 
 ### 🔵 1B. BETEDGE PRO (BEP)
 *Doel: Data visualiseren, rekenen en administratie.*
@@ -114,10 +103,6 @@ Bevat de algemene informatie over het moment van scannen.
 - `sport`        : De categorie (bijv. 'Voetbal', 'Tennis').
 - `captured_at`  : Exacte tijdstip van opslag.
 - `user_id`      : ID van de scanner-account (voor audit-doeleinden).
-- `last_seen_at` : [NIEUW] Timestamp van de laatste hartslag (ververs-indicator).
-
-
-
 
 **Tabel: `odds_lines` (De Wedstrijdgegevens / Kind)**
 Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.
@@ -292,12 +277,10 @@ extra controle voor de AI: komt de code overeen met het verhaal van Johan?
 
 ✅ BES: HUIDIGE STATUS (WAT HET NU DOET)
 --------------------------------------------------------------------------------
-1. **Herkenning:** De scanner werkt nu op 4 grote platforms:
-   - **Unibet** (en Kambi klonen zoals BetCity, Jack's).
-   - **TOTO** (via stabiele index-selector).
-   - **Circus** (Gaming1 platform).
-   - **TonyBet** (SoftLabs platform).
-2. **Scanning:** De 'Ogen' lezen de pagina en extraheren live 1X2 odds, datums en teamnamen.
+1. **Herkenning:** Bij het bezoeken van een URL (bijv. Unibet.nl) checkt BES in 
+   de lokale configuratie of deze site ondersteund wordt.
+2. **Scanning:** De 'Ogen' lezen de pagina. Momenteel werkt dit volledig voor 
+   Unibet (Kambi-structuur) en experimenteel voor TOTO.
 3. **Data Opslag:** Gevonden wedstrijden en odds worden direct als 'Rauwe Data' 
    in Supabase opgeslagen (`odds_captures` & `odds_lines`).
 4. **Mirroring:** Data van Unibet wordt automatisch gekopieerd naar BetCity 
@@ -310,7 +293,7 @@ extra controle voor de AI: komt de code overeen met het verhaal van Johan?
 1. **Universele Detectie:** De scanner herkent automatisch elke goksite die in 
    de database staat, ongeacht de structuur.
 2. **Rijke Data:** Naast namen en odds, haalt de scanner ook slimme context op:
-   - De exacte speeldatum en tijd (Nu actief voor TOTO/Circus/TonyBet).
+   - De exacte speeldatum en tijd.
    - De Sport en Competitie (League).
 3. **Flexibiliteit:** Probleemloze verwerking van zowel 2-Weg (Winst/Verlies) 
    als 3-Weg (Winst/Gelijk/Verlies) markten.
