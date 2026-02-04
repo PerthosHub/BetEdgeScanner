@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.4 (Simplification Update)
-Laatste Update: 01 Feb 2026
+Versie: 3.5 (Scanner Expansion & Heartbeat Update)
+Laatste Update: 04 Feb 2026
 
 ================================================================================
 📊 SYSTEEM STATUS & VERSIES
@@ -9,12 +9,12 @@ Laatste Update: 01 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.20.0
+    - VERSIE: v3.21.0
     - STATUS: ✅ Actief & In Sync
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.1.0
+    - VERSIE: v2.3.1
     - STATUS: ✅ Actief & In Sync
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
@@ -36,12 +36,15 @@ Laatste Update: 01 Feb 2026
 │   ├── 📄 `sessieBeheer.ts`  # Beveiliging: Regelt Auth & User ID voor Supabase.
 │   ├── 📄 `configuratie.ts`  # Instellingen: Haalt broker-lijst op uit de database.
 │   ├── 📄 `scanVerwerker.ts` # Logica: Coördineert data & Mirror Strategy.
-│   └── 📄 `database.ts`      # Schrijver: Verantwoordelijk voor de SQL inserts.
+│   ├── 📄 `databaseSchrijver.ts` # Schrijver: Verantwoordelijk voor de SQL inserts.
+│   └── 📄 `logCentrum.ts`    # Flight Tower: Real-time monitoring hub.
 │
 ├── 📂 `content/`             # De 'Ogen' - Draait direct op de bookmaker site
 │   ├── 📄 `index.ts`         # Router: Herkent de URL en kiest de juiste scanner.
-│   ├── 📄 `unibet.ts`        # Parser: Specifieke instructies voor Kambi sites.
-│   └── 📄 `toto.ts`          # Parser: Specifieke instructies voor TOTO.
+│   ├── 📄 `unibet.ts`        # Parser: Kambi sites (Unibet, BetCity).
+│   ├── 📄 `toto.ts`          # Parser: TOTO (Nederlandse Loterij).
+│   ├── 📄 `circus.ts`        # Parser: Gaming1 platform.
+│   └── 📄 `tonybet.ts`       # Parser: SoftLabs platform.
 │
 ├── 📂 `lib/`                 # Koppelingen: Bevat o.a. de Supabase Client.
 ├── 📂 `utils/`               # Hulptools: Voor tijdnotaties, logs en opslag.

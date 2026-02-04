@@ -1,8 +1,8 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.3.0
-Datum: 03 Feb 2026
+Huidige Versie: 2.3.1
+Datum: 04 Feb 2026
 
 ---
 
@@ -40,6 +40,10 @@ Datum: 03 Feb 2026
 ### 2. 🧪 Stabiliteits Monitor
 *   **Doel:** Monitoren hoe de nieuwe parsers zich houden tijdens live wedstrijden en layout veranderingen.
 
+### 3. 🔗 Shared Kernel
+*   **Doel:** Datum-logica synchroniseren met BEP.
+*   **Status:** ✅ VOLTOOID via fysieke Hard Link.
+
 
 ---
 
@@ -56,6 +60,11 @@ Datum: 03 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.3.1] - 2026-02-04
+**"Ecosystem Sync"**
+- **TECH:** Types en date.ts gesynchroniseerd met BEP v3.21.0.
+- **DOC:** Grondwet bijgewerkt naar v3.5.
 
 ### [2.3.0] - 2026-02-03
 **"The Flight Tower Update"**

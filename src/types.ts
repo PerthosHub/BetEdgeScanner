@@ -25,8 +25,8 @@ export const MARKET_TYPE_LABELS: Record<MarketType, string> = {
 export type SportFilter = 'all' | 'Voetbal' | 'Tennis';
 
 // --- Navigation Types ---
-// AANGEPAST: 'quickscan' verwijderd
-export type AppTab = 'dashboard' | 'promotions' | 'resultaten' | 'history' | 'brokers'; 
+// AANGEPAST: 'quickscan' en 'OddsBeater' volledig verwijderd (v3.20+)
+export type AppTab = 'dashboard' | 'promotions' | 'resultaten' | 'history' | 'brokers';
 
 export interface Broker {
   id: string;

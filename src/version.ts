@@ -7,11 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.2.0',
-  date: '2026-02-02',
+  version: '2.3.1',
+  date: '2026-02-04',
   label: 'Expansion Pack',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'TECH' as ChangeType,
+      text: 'Ecosystem Sync',
+      technicalDetails: 'Types en Shared Kernel (date.ts) gesynchroniseerd met BEP v3.21.0.'
+    },
     {
       type: 'FEAT' as ChangeType,
       text: 'Nieuwe Scanners: Circus & TonyBet',
