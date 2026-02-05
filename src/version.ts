@@ -7,29 +7,24 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.3.2',
+  version: '2.4.0',
   date: '2026-02-05',
-  label: 'Flight Tower Pro',
+  label: 'Flight Tower Gold',
   status: 'Stable',
   detailedChanges: [
     {
       type: 'FEAT' as ChangeType,
       text: 'The Flight Tower 2.0',
-      technicalDetails: 'Volledige transformatie van monitor.html naar een Chrome DevTools-style cockpit met zijbalk, ultra-compacte match-rows en visuele iconografie (💓, 📈, 💾).'
+      technicalDetails: 'Cockpit transformatie naar DevTools UI met sidebar, compacte match-rows en hyper-visual iconografie.'
     },
     {
       type: 'FEAT' as ChangeType,
-      text: 'Dual-Stream Monitoring',
-      technicalDetails: 'Monitor streamt nu simultaan Content (DOM) en Background (Brein) logs via een nieuwe interne Event Bus in storage.ts.'
-    },
-    {
-      type: 'UX' as ChangeType,
-      text: 'Data Inspector 2.0',
-      technicalDetails: 'Inklapbare metadata-boxen met automatische "Match Card" rendering voor odds updates. Toont teams, odds en live-status in strakke one-liners.'
+      text: 'Shared Normalization Engine',
+      technicalDetails: 'Ecosystem-wide team normalisatie geïmplementeerd in BES. Scanner slaat nu direct gepoetste "home_name_norm" velden op.'
     },
     {
       type: 'SAFETY' as ChangeType,
-      text: 'Stealth Error Protocol',
+      text: 'Stealth Pro Protocol',
       technicalDetails: 'Alle browser-console foutmeldingen op broker-pagina\'s zijn uitgeschakeld; errors worden nu exclusief en onzichtbaar naar de Flight Tower gestuurd.'
     }
   ]

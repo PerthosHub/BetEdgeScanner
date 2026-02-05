@@ -2,6 +2,7 @@
 import { supabase } from '../lib/supabase';
 import { voegLogToe } from '../utils/storage';
 import { OddsLine } from '../types';
+import { normalizeTeamName } from '../utils/normalization';
 
 interface OpslagVerzoek {
   brokerId: string;
@@ -49,6 +50,8 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
       external_event_id: m.externalEventId,
       home_name_raw: m.homeNameRaw || 'Onbekend',
       away_name_raw: m.awayNameRaw || 'Onbekend',
+      home_name_norm: normalizeTeamName(m.homeNameRaw || ''),
+      away_name_norm: normalizeTeamName(m.awayNameRaw || ''),
       odds_1: m.odds1 || null,
       odds_x: m.oddsX || null,
       odds_2: m.odds2 || null,

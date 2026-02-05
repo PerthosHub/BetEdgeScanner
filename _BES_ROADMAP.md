@@ -1,14 +1,14 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.3.2
+Huidige Versie: 2.4.0
 Datum: 05 Feb 2026
 
 ---
 
 ## ✅ LAATST AFGEROND
+- [x] **v2.4.0: Flight Tower Gold:** Cockpit v2.0 met shared normalization engine en stealth pro protocol.
 - [x] **v2.3.2: Flight Tower 2.0:** Volledige cockpit transformatie met ultra-compacte match rows en dual-streaming.
-- [x] **v2.3.1: Ecosystem Sync:** Types en date.ts gesynchroniseerd met BEP v3.21.0.
 - [x] **v2.3.0: Heartbeat Protocol:** Database updates via `last_seen_at` om data-versheid te garanderen in BEP.
 - [x] **v2.2.1: Stealth Mode:** Alle visuele indicatoren (groene randen) en publieke console.logs verwijderd.
 - [x] **v2.2.0: Multi-Broker:** Circus & TonyBet parsers volledig operationeel.
@@ -61,6 +61,12 @@ Datum: 05 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.4.0] - 2026-02-05
+**"Flight Tower Gold"**
+- **FEAT:** **The Flight Tower 2.0:** Volledige cockpit transformatie naar DevTools-style UI met sidebar en compacte data-rows.
+- **FEAT:** **Shared Normalization:** Ecosystem-wide team normalisatie geïmplementeerd in BES. Scanner slaat nu direct gepoetste "home_name_norm" velden op.
+- **SAFETY:** **Stealth Pro:** Broker-pagina's zijn nu 100% console-clean; alle errors gaan exclusief naar de Tower.
 
 ### [2.3.2] - 2026-02-05
 **"Flight Tower Pro"**

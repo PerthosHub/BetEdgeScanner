@@ -26,7 +26,7 @@ export type SportFilter = 'all' | 'Voetbal' | 'Tennis';
 
 // --- Navigation Types ---
 // AANGEPAST: 'quickscan' en 'OddsBeater' volledig verwijderd (v3.20+)
-export type AppTab = 'dashboard' | 'promotions' | 'resultaten' | 'history' | 'brokers';
+export type AppTab = 'dashboard' | 'promotions' | 'resultaten' | 'history' | 'brokers' | 'entities';
 
 export interface Broker {
   id: string;
@@ -284,6 +284,7 @@ export interface ManualOutcomeInput {
 }
 
 export { formatDateWithLabels, formatTimeAgo } from './utils/date';
+export { normalizeTeamName, formatNameForDisplay } from './utils/normalization';
 
 // --- Monitor & Logging Types ---
 
