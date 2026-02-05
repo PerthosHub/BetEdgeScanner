@@ -11,10 +11,13 @@ export const stuurLog = (
     bericht: string,
     meta: any = null
 ) => {
-    // In Stealth Mode loggen we NIET naar de console, behalve errors
+    // STEALTH UPGRADE: Nooit meer console.log/error in de browser van de broker.
+    // Alles gaat nu EXCLUSIEF naar de Flight Tower.
+    /*
     if (niveau === 'ERROR') {
         console.error(`[BES] ${actie}:`, bericht, meta);
     }
+    */
 
     const payload: LogBericht = {
         id: crypto.randomUUID(),

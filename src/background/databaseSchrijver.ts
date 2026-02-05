@@ -63,7 +63,15 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
 
     if (linesError) throw new Error(`Lines Error: ${linesError.message}`);
 
-    await voegLogToe('ACHTERGROND (BREIN)', 'Opgeslagen', `${matches.length} matches voor ${brokerName}`, null, 'success');
+    await voegLogToe('ACHTERGROND (BREIN)', 'Opgeslagen', `${matches.length} matches voor ${brokerName}`, {
+        count: matches.length,
+        broker: brokerName,
+        matches: matches.map(m => ({
+            teams: `${m.homeNameRaw} vs ${m.awayNameRaw}`,
+            odds: `[${m.odds1}, ${m.oddsX}, ${m.odds2}]`,
+            live: m.isLive
+        }))
+    }, 'success');
 
   } catch (error: any) {
     console.error('💥 DB FOUT:', error);

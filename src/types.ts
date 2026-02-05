@@ -284,3 +284,32 @@ export interface ManualOutcomeInput {
 }
 
 export { formatDateWithLabels, formatTimeAgo } from './utils/date';
+
+// --- Monitor & Logging Types ---
+
+export type LogNiveau = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'TRACE';
+
+export interface LogBericht {
+    id: string;
+    tijdstempel: number;
+    niveau: LogNiveau;
+    bron: {
+        url: string;
+        tabId?: number;
+    };
+    actie: string;
+    bericht: string;
+    meta?: any;
+}
+
+export interface ScanPayload {
+    url: string;
+    sport?: string;
+    matches: any[];
+    totaalGevonden: number;
+}
+
+export interface HeartbeatPayload {
+    url: string;
+    timestamp: number;
+}

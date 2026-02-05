@@ -7,30 +7,30 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.3.1',
-  date: '2026-02-04',
-  label: 'Expansion Pack',
+  version: '2.3.2',
+  date: '2026-02-05',
+  label: 'Flight Tower Pro',
   status: 'Stable',
   detailedChanges: [
     {
-      type: 'TECH' as ChangeType,
-      text: 'Ecosystem Sync',
-      technicalDetails: 'Types en Shared Kernel (date.ts) gesynchroniseerd met BEP v3.21.0.'
+      type: 'FEAT' as ChangeType,
+      text: 'The Flight Tower 2.0',
+      technicalDetails: 'Volledige transformatie van monitor.html naar een Chrome DevTools-style cockpit met zijbalk, ultra-compacte match-rows en visuele iconografie (💓, 📈, 💾).'
     },
     {
       type: 'FEAT' as ChangeType,
-      text: 'Nieuwe Scanners: Circus & TonyBet',
-      technicalDetails: 'Parsers toegevoegd voor Gaming1 (Circus) en SoftLabs (TonyBet) platforms met specifieke datum- en odds-herkenning.'
+      text: 'Dual-Stream Monitoring',
+      technicalDetails: 'Monitor streamt nu simultaan Content (DOM) en Background (Brein) logs via een nieuwe interne Event Bus in storage.ts.'
     },
     {
-      type: 'FIX' as ChangeType,
-      text: 'TOTO Odds Correctie',
-      technicalDetails: 'Herschreven naar index-based selectie om samengesmolten tekst ("12,27") te voorkomen en 3-Weg detectie verbeterd.'
+      type: 'UX' as ChangeType,
+      text: 'Data Inspector 2.0',
+      technicalDetails: 'Inklapbare metadata-boxen met automatische "Match Card" rendering voor odds updates. Toont teams, odds en live-status in strakke one-liners.'
     },
     {
-      type: 'TECH' as ChangeType,
-      text: 'Router Expansie',
-      technicalDetails: 'Content script router herkent nu 4 unieke domeinen (Unibet, TOTO, Circus, TonyBet) en laadt de juiste logica.'
+      type: 'SAFETY' as ChangeType,
+      text: 'Stealth Error Protocol',
+      technicalDetails: 'Alle browser-console foutmeldingen op broker-pagina\'s zijn uitgeschakeld; errors worden nu exclusief en onzichtbaar naar de Flight Tower gestuurd.'
     }
   ]
 };

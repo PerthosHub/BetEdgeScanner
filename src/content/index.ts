@@ -48,9 +48,16 @@ const startScanRonde = () => {
   // SCENARIO A: NIEUWS (Direct versturen)
   if (gewijzigdeWedstrijden.length > 0) {
     // Loggen via centrale (zichtbaar in monitor)
-    stuurLog('SUCCESS', 'Wijzigingen Gevonden', `${gewijzigdeWedstrijden.length} nieuwe odds gevonden.`, { count: gewijzigdeWedstrijden.length });
+    stuurLog('SUCCESS', 'Wijzigingen Gevonden', `${gewijzigdeWedstrijden.length} nieuwe odds gevonden.`, {
+        count: gewijzigdeWedstrijden.length,
+        matches: gewijzigdeWedstrijden.map(m => ({
+            teams: `${m.homeNameRaw} vs ${m.awayNameRaw}`,
+            odds: `[${m.odds1}, ${m.oddsX}, ${m.odds2}]`,
+            live: m.isLive
+        }))
+    });
 
-    chrome.runtime.sendMessage({ 
+    chrome.runtime.sendMessage({
       type: 'ODDS_DATA', 
       payload: {
           url: window.location.href,

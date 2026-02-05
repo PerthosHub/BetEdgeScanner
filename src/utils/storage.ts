@@ -20,10 +20,13 @@ export interface ScannerStats {
 }
   
 // Helper om logica (NL) te scheiden van techniek (ENG)
+// 📡 Event bus voor Live Broadcasts van Achtergrond naar Monitor
+export const logBroadcastEvent = new EventTarget();
+
 export const voegLogToe = async (
-    bron: LogBron, 
-    actie: string, 
-    omschrijving: string = '', 
+    bron: LogBron,
+    actie: string,
+    omschrijving: string = '',
     payload: any = null,
     type: 'info'|'success'|'warning'|'error' = 'info'
 ) => {
@@ -37,6 +40,9 @@ export const voegLogToe = async (
         payload,
         type
     };
+
+    // 📡 BROADCAST: Informeer actieve monitors over achtergrond acties
+    logBroadcastEvent.dispatchEvent(new CustomEvent('nieuw_log', { detail: logItem }));
 
     // Haal oude logs op
     const result = await chrome.storage.local.get(['scanner_logs']);
