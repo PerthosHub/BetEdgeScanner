@@ -3,14 +3,35 @@ import { useEffect, useState } from 'react';
 import { ScannerLog, ScannerStats } from '../utils/storage';
 import { VERSION_INFO } from '../version';
 
+interface ScanStatus {
+  url: string;
+  sport?: string;
+  league?: string;
+  parser?: string;
+  matchesTotal: number;
+  matchesChanged: number;
+  timestamp?: number;
+  updatedAt?: number;
+  tabId?: number;
+}
+
 const App = () => {
   const [stats, setStats] = useState<ScannerStats | null>(null);
   const [logs, setLogs] = useState<ScannerLog[]>([]);
   const [actieveTab, setActieveTab] = useState<'dashboard' | 'terminal'>('terminal');
   const [openLogId, setOpenLogId] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null);
 
   // Data ophalen uit storage
   useEffect(() => {
+    const haalActieveTab = () => {
+      return new Promise<chrome.tabs.Tab | undefined>((resolve) => {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          resolve(tabs?.[0]);
+        });
+      });
+    };
+
     const laadData = async () => {
       // Typecasting toegevoegd om TypeScript tevreden te stellen
       const result = await chrome.storage.local.get(['scanner_stats', 'scanner_logs']);
@@ -20,6 +41,18 @@ const App = () => {
 
       if (statsData) setStats(statsData);
       if (logsData) setLogs(logsData);
+
+      const actieveTabInfo = await haalActieveTab();
+      const actieveTabId = actieveTabInfo?.id;
+      if (!actieveTabId) {
+        setScanStatus(null);
+        return;
+      }
+
+      const statusKey = `scan_status_${actieveTabId}`;
+      const statusResult = await chrome.storage.local.get([statusKey]);
+      const statusData = statusResult[statusKey] as ScanStatus | undefined;
+      setScanStatus(statusData || null);
     };
 
     laadData();
@@ -39,7 +72,7 @@ const App = () => {
 
     // NIEUW: Functie om monitor te openen
     const openMonitor = () => {
-      chrome.tabs.create({ url: 'src/monitor/monitor.html' });
+      chrome.tabs.create({ url: chrome.runtime.getURL('monitor.html') });
     };
 
     return (
@@ -70,6 +103,36 @@ const App = () => {
                 Terminal
             </button>
         </div>
+      </div>
+
+      {/* SCAN STATUS (Altijd zichtbaar) */}
+      <div className="bg-slate-800 p-3 rounded border border-slate-700 mb-3">
+        <div className="text-slate-400 text-xs mb-2">Status (actieve tab)</div>
+        {!scanStatus && (
+          <div className="text-slate-500 italic">Geen actieve scan in deze tab.</div>
+        )}
+        {scanStatus && (
+          <div className="space-y-1">
+            <div className="flex justify-between">
+              <span className="text-slate-500">Parser</span>
+              <span>{scanStatus.parser || 'Onbekend'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Sport</span>
+              <span>{scanStatus.sport || 'Niet gevonden'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">League</span>
+              <span>{scanStatus.league || 'Niet gevonden'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-500">Wedstrijden</span>
+              <span className={scanStatus.matchesTotal > 0 ? 'text-emerald-400' : 'text-slate-400'}>
+                {scanStatus.matchesTotal ?? 0}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* VIEW: DASHBOARD */}

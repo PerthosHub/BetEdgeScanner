@@ -50,8 +50,35 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
           const isoDate = dateMatch ? parseCircusDate(dateMatch[0]) : undefined;
           const eventTime = timeMatch ? timeMatch[0] : undefined;
 
-          // Odds verzamelen
-          const oddButtons = row.querySelectorAll('button[data-testid="outcome-summary"]');
+          const marketSummaries = Array.from(row.querySelectorAll('[data-testid="market-summary"]'));
+          const homeLower = homeTeam.toLowerCase();
+          const awayLower = awayTeam.toLowerCase();
+
+          const marketMatchesTeams = (market: Element) => {
+              const titles = Array.from(market.querySelectorAll('button[data-testid="outcome-summary"]'))
+                  .map((btn) => (btn as HTMLElement).getAttribute('title')?.toLowerCase() || '');
+              const hasHome = titles.some(t => t.includes(homeLower));
+              const hasAway = titles.some(t => t.includes(awayLower));
+              return hasHome && hasAway;
+          };
+          const marketHasLineValue = (market: Element) =>
+              !!market.querySelector('[data-testid="disable-outcome-summary"]');
+
+          const isTwoWaySport = detectedSport === 'Basketbal' || detectedSport === 'Tennis';
+          const desiredCount = isTwoWaySport ? 2 : 3;
+
+          const teamMarkets = marketSummaries.filter(m => marketMatchesTeams(m));
+          let primaryMarket = teamMarkets.find(m => !marketHasLineValue(m));
+          if (!primaryMarket) {
+              primaryMarket = teamMarkets.find(m => m.querySelectorAll('button[data-testid="outcome-summary"]').length >= desiredCount);
+          }
+          if (!primaryMarket) {
+              primaryMarket = marketSummaries.find(m => !marketHasLineValue(m) && m.querySelectorAll('button[data-testid="outcome-summary"]').length >= desiredCount);
+          }
+          if (!primaryMarket) primaryMarket = marketSummaries[0] || row;
+
+          // Odds verzamelen (alleen uit primary market)
+          const oddButtons = primaryMarket.querySelectorAll('button[data-testid="outcome-summary"]');
           const oddsValues: number[] = [];
 
           oddButtons.forEach(btn => {

@@ -24,12 +24,14 @@ chrome.runtime.onMessage.addListener((
   
   // ROUTE 1: Nieuwe Data (Insert)
   if (request.type === 'ODDS_DATA') {
+    console.log('📥 ODDS_DATA ontvangen');
     verwerkInkomendeScan(request.payload).catch(console.error);
     sendResponse({ status: 'processing_data' }); 
   }
   
   // ROUTE 2: Hartslag (Update)
   else if (request.type === 'HEARTBEAT') {
+    console.log('💓 HEARTBEAT ontvangen');
     verwerkHartslag(request.payload).catch(console.error);
     sendResponse({ status: 'processing_heartbeat' });
   }
@@ -38,6 +40,35 @@ chrome.runtime.onMessage.addListener((
   else if (request.type === 'LOG_ENTRY') {
       verwerkLogBericht(request.payload, sender);
       sendResponse({ status: 'logged' });
+  }
+  
+  // ROUTE 4: Scan Status (Popup/Hover)
+  else if (request.type === 'SCAN_STATUS') {
+      const tabId = sender.tab?.id;
+      if (tabId) {
+          const status = {
+              ...request.payload,
+              tabId,
+              updatedAt: Date.now()
+          };
+          chrome.storage.local.set({ [`scan_status_${tabId}`]: status });
+
+          const sportLabel = status.sport || 'Geen sport';
+          const leagueLabel = status.league || 'Geen league';
+          const matchesLabel = typeof status.matchesTotal === 'number' ? status.matchesTotal : 0;
+          const parserLabel = status.parser || 'Onbekend';
+
+          const titel = [
+              'BetEdge Scanner',
+              `Parser: ${parserLabel}`,
+              `Sport: ${sportLabel}`,
+              `League: ${leagueLabel}`,
+              `Matches: ${matchesLabel}`
+          ].join('\n');
+
+          chrome.action.setTitle({ tabId, title: titel });
+      }
+      sendResponse({ status: 'scan_status_saved' });
   }
 
   return false;

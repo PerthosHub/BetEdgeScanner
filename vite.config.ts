@@ -10,7 +10,7 @@ const manifest = defineManifest({
   name: 'BetEdge Scanner',
   version: VERSION_INFO.version, 
   description: 'Automatische odds scanner voor BetEdge Pro',
-  permissions: ['activeTab', 'storage', 'scripting'],
+  permissions: ['activeTab', 'storage', 'scripting', 'tabs'],
   action: {
     default_popup: 'index.html',
   },

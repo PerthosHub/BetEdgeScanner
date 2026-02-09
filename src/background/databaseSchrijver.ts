@@ -38,6 +38,7 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
     if (captureError) throw new Error(`Capture Error: ${captureError.message}`);
     
     const captureId = captureData.id;
+    await voegLogToe('ACHTERGROND (BREIN)', 'Capture opgeslagen', `ID: ${captureId}`, { broker: brokerName }, 'info');
 
     // 📝 CRUCIAAL: Schrijf ID op het 'Gele Briefje' voor de Heartbeat later
     // We gebruiken brokerId als sleutel.
@@ -92,6 +93,7 @@ export const updateLevensTeken = async (brokerId: string) => {
 
         if (!captureId) {
             // Geen actieve sessie bekend. Geen actie nodig.
+            await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat genegeerd', 'Geen actieve sessie', { brokerId }, 'warning');
             return;
         }
 
@@ -104,8 +106,10 @@ export const updateLevensTeken = async (brokerId: string) => {
         if (error) throw error;
 
         console.log(`💓 Heartbeat verwerkt voor ${brokerId} (Sessie: ${captureId})`);
+        await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat verwerkt', `Sessie: ${captureId}`, { brokerId }, 'info');
 
     } catch (error: any) {
         console.error('💥 Heartbeat Fout:', error);
+        await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat fout', error.message, { brokerId }, 'error');
     }
 };

@@ -9,7 +9,10 @@ import { Broker, ScanPayload, HeartbeatPayload } from '../types';
 export const verwerkInkomendeScan = async (payload: ScanPayload) => {
     try {
         const userId = await krijgGeldigeGebruikerId();
-        if (!userId) return;
+        if (!userId) {
+            await voegLogToe('ACHTERGROND (BREIN)', 'Geen gebruiker', 'Niet ingelogd, scan genegeerd.', { url: payload.url }, 'warning');
+            return;
+        }
 
         // 1. Welke broker is dit?
         const actieveBroker = await zoekBrokerBijUrl(payload.url);
@@ -17,6 +20,7 @@ export const verwerkInkomendeScan = async (payload: ScanPayload) => {
             await voegLogToe('ACHTERGROND (BREIN)', 'Onbekend', 'Geen broker match', { url: payload.url }, 'warning');
             return;
         }
+        await voegLogToe('ACHTERGROND (BREIN)', 'Broker match', actieveBroker.name, { brokerId: actieveBroker.id, url: payload.url }, 'info');
 
         // 2. Zet Badge op SCAN (Groen)
         chrome.action.setBadgeText({ text: 'SCAN' });
@@ -27,6 +31,7 @@ export const verwerkInkomendeScan = async (payload: ScanPayload) => {
 
         // 4. Opslaan voor elk doelwit
         for (const doelwit of doelwitten) {
+            await voegLogToe('ACHTERGROND (BREIN)', 'Opslaan gestart', doelwit.name, { brokerId: doelwit.id }, 'info');
             await verwerkEnSlaOp({ 
                 brokerId: String(doelwit.id),     
                 brokerName: String(doelwit.name), 
@@ -39,6 +44,7 @@ export const verwerkInkomendeScan = async (payload: ScanPayload) => {
 
     } catch (error) {
         console.error('❌ Fout in verwerking:', error);
+        await voegLogToe('ACHTERGROND (BREIN)', 'Verwerking fout', (error as Error).message, null, 'error');
     }
 };
 
@@ -47,7 +53,11 @@ export const verwerkHartslag = async (payload: HeartbeatPayload) => {
     try {
         // 1. Welke broker is dit?
         const actieveBroker = await zoekBrokerBijUrl(payload.url);
-        if (!actieveBroker) return; // Silent fail is ok hier
+        if (!actieveBroker) {
+            await voegLogToe('ACHTERGROND (BREIN)', 'Hartslag genegeerd', 'Geen broker match', { url: payload.url }, 'warning');
+            return;
+        }
+        await voegLogToe('ACHTERGROND (BREIN)', 'Hartslag ontvangen', actieveBroker.name, { brokerId: actieveBroker.id }, 'info');
 
         // 2. Zet Badge op IDLE (Blauw - Ruststand)
         chrome.action.setBadgeText({ text: 'IDLE' });
@@ -62,5 +72,6 @@ export const verwerkHartslag = async (payload: HeartbeatPayload) => {
 
     } catch (error) {
         console.error('❌ Fout in hartslag:', error);
+        await voegLogToe('ACHTERGROND (BREIN)', 'Hartslag fout', (error as Error).message, null, 'error');
     }
 };

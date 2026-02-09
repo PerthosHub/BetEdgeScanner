@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.5 (Scanner Expansion & Heartbeat Update)
-Laatste Update: 04 Feb 2026
+Versie: 3.6 (Merging & Parser Stability)
+Laatste Update: 08 Feb 2026
 
 ================================================================================
 📊 SYSTEEM STATUS & VERSIES
@@ -9,12 +9,12 @@ Laatste Update: 04 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.21.0
+    - VERSIE: v3.20.1
     - STATUS: ✅ Actief & In Sync
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.3.1
+    - VERSIE: v2.4.1
     - STATUS: ✅ Actief & In Sync
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
@@ -232,6 +232,10 @@ Bij het importeren van screenshots (`ScreenshotInvoerModal`) checkt de app namen
 
 ### 4B. Bet Studio Werkwijze
 De Bet Studio is de centrale hub voor al je scans en berekeningen.
+
+**Wedstrijden Koppelen (Merging)**
+- **Doel:** Handmatig samenvoegen van verschillende schrijfwijzen (bijv. "Ajax" en "AFC Ajax") direct vanuit de lijst.
+- **Logica:** Gebruiker selecteert meerdere matches; `pairMatchesInline` maakt aliassen aan voor alle bron-teams naar het doel-team.
 
 **Personal Mode (Mijn Scans)**
 - **Kleur:** Slate / Emerald thema.

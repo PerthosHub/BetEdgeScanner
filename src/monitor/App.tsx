@@ -16,8 +16,31 @@ const App = () => {
         const port = chrome.runtime.connect({ name: 'monitor_stream' });
         setIsConnected(true);
 
+        chrome.storage.local.get(['scanner_logs']).then((result) => {
+            const opgeslagen = (result.scanner_logs as any[]) || [];
+            const omgezet: LogBericht[] = opgeslagen.map((log) => ({
+                id: log.id,
+                tijdstempel: Date.now(),
+                niveau: String(log.type).toUpperCase() as LogNiveau,
+                bron: { url: log.bron || 'INTERNAL (BACKGROUND)' },
+                actie: log.actie,
+                bericht: log.omschrijving || '',
+                meta: log.payload
+            }));
+            if (omgezet.length > 0) {
+                setLogs(prev => {
+                    const seen = new Set(prev.map(l => l.id));
+                    const unique = omgezet.filter(l => !seen.has(l.id));
+                    return [...unique, ...prev].slice(0, 1000);
+                });
+            }
+        }).catch(() => {});
+
         port.onMessage.addListener((msg: LogBericht) => {
-            setLogs(prev => [msg, ...prev.slice(0, 999)]); 
+            setLogs(prev => {
+                if (prev.some(l => l.id === msg.id)) return prev;
+                return [msg, ...prev.slice(0, 999)];
+            });
             if (['ERROR', 'SUCCESS'].includes(msg.niveau)) {
                 setExpandedLogId(msg.id);
             }

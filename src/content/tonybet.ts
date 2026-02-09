@@ -29,35 +29,87 @@ export const parseTonyBetPage = (): { matches: Partial<OddsLine>[], sport?: stri
 
   matchRows.forEach((row) => {
       try {
-          const teamElements = row.querySelectorAll('[data-test="teamName"]');
-          if (teamElements.length < 2) return;
+          const teamContainers = Array.from(row.querySelectorAll('[data-test="teamName"]'));
+          const teamNames = teamContainers
+              .map((el) => el.textContent?.trim() || '')
+              .filter((name) => name.length > 0);
 
-          const homeTeam = teamElements[0].textContent?.trim() || '';
-          const awayTeam = teamElements[1].textContent?.trim() || '';
+          // Dedupe op volgorde (soms zitten dezelfde teksten dubbel in de DOM)
+          const uniekeTeams: string[] = [];
+          teamNames.forEach((name) => {
+              if (uniekeTeams[uniekeTeams.length - 1] !== name) {
+                  uniekeTeams.push(name);
+              }
+          });
 
-          // Datum & Tijd ophalen
-          const rowText = (row as HTMLElement).innerText || "";
-          const dateMatch = rowText.match(/(\d{2})\.(\d{2})\.(\d{4}),\s*(\d{2}:\d{2})/);
-          
+          if (uniekeTeams.length < 2) return;
+
+          const homeTeam = uniekeTeams[0];
+          const awayTeam = uniekeTeams[1];
+
+          // Datum & Tijd ophalen (voorkeur: data-test velden)
+          const dateElement = row.querySelector('[data-test="eventDate"]') as HTMLElement | null;
+          const timeElement = row.querySelector('[data-test="eventTime"]') as HTMLElement | null;
+
           let isoDate = undefined;
           let eventTime = undefined;
 
-          if (dateMatch) {
-              const datePart = `${dateMatch[1]}.${dateMatch[2]}.${dateMatch[3]}`; 
-              isoDate = parseTonyDate(datePart);
-              eventTime = dateMatch[4];
+          const dateText = dateElement?.textContent?.trim() || '';
+          if (dateText) {
+              isoDate = parseTonyDate(dateText);
           }
 
-          // Odds verzamelen
-          const oddElements = row.querySelectorAll('[data-test="outcome"]');
-          const oddsValues: number[] = [];
+          const timeText = timeElement?.textContent?.replace(/\u00a0/g, ' ')?.trim() || '';
+          if (timeText) {
+              eventTime = timeText;
+          }
 
-          oddElements.forEach((el, index) => {
-              if (index > 2) return; 
-              // STAP 2: Conversie via Utils
-              const val = parseOddWaarde(el.textContent);
-              if (val > 1) oddsValues.push(val);
+          // Fallback: probeer datum/tijd uit de rijtekst te halen
+          if (!isoDate || !eventTime) {
+              const rowText = (row as HTMLElement).innerText || "";
+              const dateMatch = rowText.match(/(\d{2})\.(\d{2})\.(\d{4}),\s*(\d{2}:\d{2})/);
+              if (dateMatch) {
+                  const datePart = `${dateMatch[1]}.${dateMatch[2]}.${dateMatch[3]}`; 
+                  isoDate = isoDate ?? parseTonyDate(datePart);
+                  eventTime = eventTime ?? dateMatch[4];
+              }
+          }
+
+          // Odds verzamelen (TonyBet toont meerdere kolommen: 1,2, H1, Handicap, H2)
+          // We pakken daarom de linkse kolommen op basis van positionering (DOM kan afwijken).
+          const headerRow = row.closest('[data-test="eventsTable"]')?.querySelector('[data-test="eventTableHeader"]') as HTMLElement | null;
+          const headerGroups = headerRow ? Array.from(headerRow.querySelectorAll('[data-test="marketItemHeader"]')) : [];
+
+          let primaryMarketIndex = 0;
+          let expectsThreeWay = false;
+
+          headerGroups.forEach((group, idx) => {
+              const labels = Array.from(group.querySelectorAll('span'))
+                  .map((s) => s.textContent?.trim().toUpperCase())
+                  .filter(Boolean) as string[];
+              const has1 = labels.includes('1');
+              const has2 = labels.includes('2');
+              const hasX = labels.includes('X');
+              const hasHandicap = labels.some((l) => l.startsWith('H') || l.includes('HANDICAP'));
+
+              if (has1 && has2 && hasX) {
+                  primaryMarketIndex = idx;
+                  expectsThreeWay = true;
+              } else if (has1 && has2 && !hasHandicap && !expectsThreeWay) {
+                  primaryMarketIndex = idx;
+              }
           });
+
+          const marketItems = Array.from(row.querySelectorAll('[data-test="marketItem"]'));
+          const primaryMarket = marketItems[primaryMarketIndex] ?? marketItems[0];
+          const primaryOutcomes = primaryMarket ? Array.from(primaryMarket.querySelectorAll('[data-test="outcome"]')) : [];
+          const parsedOutcomes = primaryOutcomes
+              .map((el) => parseOddWaarde(el.textContent))
+              .filter((v) => v > 1);
+
+          const isTwoWaySport = detectedSport === 'Basketbal' || detectedSport === 'Tennis';
+          const isTwoWay = isTwoWaySport || !expectsThreeWay;
+          const oddsValues = (isTwoWay ? parsedOutcomes.slice(0, 2) : parsedOutcomes.slice(0, 3));
 
           if (oddsValues.length < 2) return;
 

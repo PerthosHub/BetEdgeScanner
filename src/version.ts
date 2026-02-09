@@ -7,25 +7,25 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.4.0',
-  date: '2026-02-05',
-  label: 'Flight Tower Gold',
+  version: '2.4.1',
+  date: '2026-02-08',
+  label: 'Scanner bugs opgelost',
   status: 'Stable',
   detailedChanges: [
     {
-      type: 'FEAT' as ChangeType,
-      text: 'The Flight Tower 2.0',
-      technicalDetails: 'Cockpit transformatie naar DevTools UI met sidebar, compacte match-rows en hyper-visual iconografie.'
+      type: 'FIX' as ChangeType,
+      text: 'Correcte market-selectie bij TonyBet (NBA/2-weg)',
+      technicalDetails: 'Odds worden nu gekozen op basis van header-coëfficiënten; voorkomt mismatch met handicap of extra markets.'
     },
     {
-      type: 'FEAT' as ChangeType,
-      text: 'Shared Normalization Engine',
-      technicalDetails: 'Ecosystem-wide team normalisatie geïmplementeerd in BES. Scanner slaat nu direct gepoetste "home_name_norm" velden op.'
+      type: 'FIX' as ChangeType,
+      text: 'Teamnamen dubbeling opgelost',
+      technicalDetails: 'Teamnaam parsing deduped zodat thuis/uit niet identiek worden bij TonyBet en vergelijkbare layouts.'
     },
     {
-      type: 'SAFETY' as ChangeType,
-      text: 'Stealth Pro Protocol',
-      technicalDetails: 'Alle browser-console foutmeldingen op broker-pagina\'s zijn uitgeschakeld; errors worden nu exclusief en onzichtbaar naar de Flight Tower gestuurd.'
+      type: 'FIX' as ChangeType,
+      text: 'Circus NBA pakt alleen Money Line odds',
+      technicalDetails: 'Primary market-selectie filtert handicap/totaal en houdt 2-weg odds over voor Basketbal.'
     }
   ]
 };

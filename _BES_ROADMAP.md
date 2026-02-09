@@ -1,8 +1,8 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.4.0
-Datum: 05 Feb 2026
+Huidige Versie: 2.4.1
+Datum: 08 Feb 2026
 
 ---
 
@@ -61,6 +61,13 @@ Datum: 05 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.4.1] - 2026-02-08
+**"Scanner bugs opgelost"**
+- **FIX:** Correcte market-selectie bij TonyBet (NBA/2-weg odds).
+- **FIX:** Teamnamen dubbeling gededupeerd (Thuis/Uit correct gescheiden).
+- **FIX:** Circus NBA filtert nu correct op Money Line.
+- **UX:** Popup toont nu real-time scan status van de actieve tab.
 
 ### [2.4.0] - 2026-02-05
 **"Flight Tower Gold"**
