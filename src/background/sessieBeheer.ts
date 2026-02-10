@@ -27,7 +27,8 @@ export const krijgGeldigeGebruikerId = async (): Promise<string | null> => {
 
   if (error || !authData.user) {
     console.error('❌ Login mislukt:', error);
-    voegLogToe('AUTH', 'Login Mislukt', 'Kon niet automatisch inloggen.', error, 'error');
+    const bericht = error?.message || 'Onbekende auth fout';
+    voegLogToe('AUTH', 'Login Mislukt', 'Kon niet automatisch inloggen.', { error: bericht }, 'error');
     return null;
   }
 

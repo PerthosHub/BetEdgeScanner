@@ -69,7 +69,6 @@ export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string 
       const marktType = bepaalMarktType(aantalOdds, gedetecteerdeSport);
 
       // STAP 4: ID via Utils (of fallback naar TOTO ID uit URL)
-      const idMatch = href.match(/\/wedstrijd\/(\d+)\//);
       // We geven voorkeur aan onze generieke ID generator voor consistentie, 
       // tenzij je perse de TOTO numeric ID wilt behouden. 
       // Voor nu gebruiken we de generieke generator zodat 'Ajax - Feyenoord' overal hetzelfde ID krijgt.
@@ -89,7 +88,7 @@ export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string 
           eventTime: tijd
       });
 
-    } catch (fout) {
+    } catch {
       // Skip row
     }
   });

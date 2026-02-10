@@ -48,9 +48,9 @@ export const parseUnibetPage = (): { matches: Partial<OddsLine>[], sport?: strin
               odds2: odd2,
               isLive: false,
               source: 'Unibet'
-            } as any);
+            } as Partial<OddsLine>);
       }
-    } catch (err) {
+    } catch {
       // Silent fail
     }
   });

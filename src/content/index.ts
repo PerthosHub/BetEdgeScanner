@@ -5,6 +5,7 @@ import { parseCircusPage } from './circus';
 import { parseTonyBetPage } from './tonybet';
 import { bepaalLeagueUitUrl } from './utils';
 import { stuurLog } from '../utils/logger'; // <-- NIEUW
+import { OddsLine } from '../types';
 
 // STEALTH MODE: Start log (Alleen intern zichtbaar)
 stuurLog('INFO', 'Script Gestart', 'Content script geladen op pagina.', { url: window.location.href });
@@ -54,11 +55,12 @@ const startScanRonde = () => {
       return; 
   }
 
-  const gewijzigdeWedstrijden: any[] = [];
+  const gewijzigdeWedstrijden: Partial<OddsLine>[] = [];
 
   // 1. Check op wijzigingen (Diffing)
-  alleWedstrijden.forEach((wedstrijd: any) => {
+  alleWedstrijden.forEach((wedstrijd) => {
     const id = wedstrijd.externalEventId;
+    if (!id) return;
     const vingerafdruk = `${wedstrijd.odds1}-${wedstrijd.oddsX}-${wedstrijd.odds2}`;
 
     if (laatstBekendeOdds.get(id) !== vingerafdruk) {

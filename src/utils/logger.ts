@@ -9,7 +9,7 @@ export const stuurLog = (
     niveau: LogNiveau,
     actie: string,
     bericht: string,
-    meta: any = null
+    meta: Record<string, unknown> | null = null
 ) => {
     // STEALTH UPGRADE: Nooit meer console.log/error in de browser van de broker.
     // Alles gaat nu EXCLUSIEF naar de Flight Tower.
@@ -36,7 +36,7 @@ export const stuurLog = (
             type: 'LOG_ENTRY',
             payload
         });
-    } catch (e) {
+    } catch {
         // Kan gebeuren als extensie context ongeldig is (bijv. tijdens update)
     }
 };

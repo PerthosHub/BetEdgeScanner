@@ -2,7 +2,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { crx, defineManifest } from '@crxjs/vite-plugin'
-// @ts-ignore - Vite handelt de import van TS bestanden af tijdens build
 import { VERSION_INFO } from './src/version' 
 
 const manifest = defineManifest({

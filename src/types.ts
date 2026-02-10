@@ -300,13 +300,13 @@ export interface LogBericht {
     };
     actie: string;
     bericht: string;
-    meta?: any;
+    meta?: Record<string, unknown> | null;
 }
 
 export interface ScanPayload {
     url: string;
     sport?: string;
-    matches: any[];
+    matches: Partial<OddsLine>[];
     totaalGevonden: number;
 }
 

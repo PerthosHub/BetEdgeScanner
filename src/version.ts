@@ -1,4 +1,4 @@
-import { ChangeType } from './types';
+import type { ChangeType } from './types';
 
 export interface ChangelogEntry {
   type: ChangeType;
@@ -7,25 +7,25 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.4.1',
-  date: '2026-02-08',
-  label: 'Scanner bugs opgelost',
+  version: '2.5.0',
+  date: '2026-02-10',
+  label: 'Blok B: Build-health naar Groen',
   status: 'Stable',
   detailedChanges: [
     {
-      type: 'FIX' as ChangeType,
-      text: 'Correcte market-selectie bij TonyBet (NBA/2-weg)',
-      technicalDetails: 'Odds worden nu gekozen op basis van header-coëfficiënten; voorkomt mismatch met handicap of extra markets.'
+      type: 'REFACTOR' as ChangeType,
+      text: 'Volledige type-check en lint opruiming',
+      technicalDetails: 'Any types vervangen door concrete interfaces in background en content scripts. React hook dependencies gefixt in Monitor.'
     },
     {
       type: 'FIX' as ChangeType,
-      text: 'Teamnamen dubbeling opgelost',
-      technicalDetails: 'Teamnaam parsing deduped zodat thuis/uit niet identiek worden bij TonyBet en vergelijkbare layouts.'
+      text: 'Type-veiligheid in logging en monitor',
+      technicalDetails: 'LogBericht en ScanPayload interfaces toegevoegd en toegepast op de dataflow.'
     },
     {
-      type: 'FIX' as ChangeType,
-      text: 'Circus NBA pakt alleen Money Line odds',
-      technicalDetails: 'Primary market-selectie filtert handicap/totaal en houdt 2-weg odds over voor Basketbal.'
+      type: 'SECURITY' as ChangeType,
+      text: 'Build hygiene verbeterd',
+      technicalDetails: 'Tsconfig configuratie aangescherpt voor erasableSyntaxOnly en enum handling.'
     }
   ]
 };

@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.6 (Merging & Parser Stability)
-Laatste Update: 08 Feb 2026
+Versie: 3.7 (Calculations Freeze & Build Stability)
+Laatste Update: 10 Feb 2026
 
 ================================================================================
 📊 SYSTEEM STATUS & VERSIES
@@ -9,13 +9,13 @@ Laatste Update: 08 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.20.1
-    - STATUS: ✅ Actief & In Sync
+    - VERSIE: v3.24.0
+    - STATUS: ✅ Actief & In Sync (Tests Groen: 18/18)
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.4.1
-    - STATUS: ✅ Actief & In Sync
+    - VERSIE: v2.5.0
+    - STATUS: ✅ Actief & In Sync (Build: OK)
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -181,6 +181,8 @@ Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.
 
 
 ### 🧮 3B. REKEN LOGICA (BEP - "Einstein Engine")
+
+🛡️ **Freeze & Regressie:** De rekencore is "bevroren" en gedekt door een uitgebreide vitest suite (`calculations.test.ts`). Geen wijzigingen toegestaan zonder dat alle 18 scenario's groen zijn.
 
 🧠 **Identificatie & Target Lock**
 - Nieuwe scans komen binnen met `home_name_raw`.

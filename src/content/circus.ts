@@ -111,7 +111,7 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
               eventTime: eventTime
           });
 
-      } catch (e) {
+      } catch {
           // Silent fail bij parse errors in een rij
       }
   });

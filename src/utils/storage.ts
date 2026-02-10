@@ -8,7 +8,7 @@ export interface ScannerLog {
     bron: LogBron;
     actie: string; // Korte titel (NL)
     omschrijving?: string; // Lange tekst (NL)
-    payload?: any; // De ruwe data (JSON)
+    payload?: Record<string, unknown> | null; // De ruwe data (JSON)
     type: 'info' | 'success' | 'warning' | 'error';
   }
   
@@ -27,7 +27,7 @@ export const voegLogToe = async (
     bron: LogBron,
     actie: string,
     omschrijving: string = '',
-    payload: any = null,
+    payload: Record<string, unknown> | null = null,
     type: 'info'|'success'|'warning'|'error' = 'info'
 ) => {
 

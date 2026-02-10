@@ -134,7 +134,7 @@ export const parseTonyBetPage = (): { matches: Partial<OddsLine>[], sport?: stri
               eventTime: eventTime
           });
 
-      } catch (e) {
+      } catch {
           // Skip row
       }
   });

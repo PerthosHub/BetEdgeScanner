@@ -1,12 +1,13 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.4.1
-Datum: 08 Feb 2026
+Huidige Versie: 2.5.0
+Datum: 10 Feb 2026
 
 ---
 
 ## ✅ LAATST AFGEROND
+- [x] **v2.5.0: Build-Health Groen:** Volledige refactor van background en monitor naar strikte TypeScript interfaces. Linting en build 100% clean.
 - [x] **v2.4.0: Flight Tower Gold:** Cockpit v2.0 met shared normalization engine en stealth pro protocol.
 - [x] **v2.3.2: Flight Tower 2.0:** Volledige cockpit transformatie met ultra-compacte match rows en dual-streaming.
 - [x] **v2.3.0: Heartbeat Protocol:** Database updates via `last_seen_at` om data-versheid te garanderen in BEP.
@@ -61,6 +62,13 @@ Datum: 08 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.5.0] - 2026-02-10
+**"Build-health naar Groen"**
+- **REFACTOR:** Volledige type-check en lint opruiming in BES.
+- **REFACTOR:** React hook dependencies en state management in Monitor gepoetst.
+- **TECH:** Tsconfig aangescherpt voor erasableSyntaxOnly.
+- **SYNC:** Hard Link types.ts bijgewerkt met nieuwe log interfaces.
 
 ### [2.4.1] - 2026-02-08
 **"Scanner bugs opgelost"**
