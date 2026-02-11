@@ -17,6 +17,18 @@ let laatsteBerichtTijd = Date.now();
 let laatsteStatusKey = '';
 let laatsteStatusTijd = 0;
 
+const formatOdd = (odd?: number): string => (typeof odd === 'number' && Number.isFinite(odd) ? odd.toFixed(4) : 'na');
+
+const maakPayloadFingerprint = (matches: Partial<OddsLine>[]): string => {
+  const regels = matches
+    .map((m) => {
+      const id = m.externalEventId || `${m.homeNameRaw || ''}|${m.awayNameRaw || ''}`;
+      return `${id}:${formatOdd(m.odds1)}:${formatOdd(m.oddsX)}:${formatOdd(m.odds2)}`;
+    })
+    .sort();
+  return regels.join('||');
+};
+
 const voerParserUit = () => {
   const url = window.location.href;
   
@@ -39,6 +51,7 @@ const voerParserUit = () => {
 const startScanRonde = () => {
   const { matches: alleWedstrijden, sport, parser } = voerParserUit();
   const nu = Date.now();
+  const scanRunId = crypto.randomUUID();
   const league = bepaalLeagueUitUrl();
   
   // TRACE LOGGING: Zie waarom er niets gebeurt
@@ -49,6 +62,7 @@ const startScanRonde = () => {
         sport,
         league,
         parser,
+        scanRunId,
         matchesTotal: 0,
         matchesChanged: 0,
       });
@@ -71,8 +85,12 @@ const startScanRonde = () => {
   
   // SCENARIO A: NIEUWS (Direct versturen)
   if (gewijzigdeWedstrijden.length > 0) {
+    const payloadFingerprint = maakPayloadFingerprint(gewijzigdeWedstrijden);
+
     // Loggen via centrale (zichtbaar in monitor)
     stuurLog('SUCCESS', 'Wijzigingen Gevonden', `${gewijzigdeWedstrijden.length} nieuwe odds gevonden.`, {
+        scanRunId,
+        payloadFingerprint,
         count: gewijzigdeWedstrijden.length,
         matches: gewijzigdeWedstrijden.map(m => ({
             teams: `${m.homeNameRaw} vs ${m.awayNameRaw}`,
@@ -81,12 +99,16 @@ const startScanRonde = () => {
         }))
     });
 
-    stuurLog('INFO', 'ODDS_DATA verstuurd', `${gewijzigdeWedstrijden.length} wijzigingen gestuurd.`, { url: window.location.href });
+    stuurLog('INFO', 'ODDS_DATA verstuurd', `${gewijzigdeWedstrijden.length} wijzigingen gestuurd.`, { url: window.location.href, scanRunId, payloadFingerprint });
     chrome.runtime.sendMessage({
       type: 'ODDS_DATA', 
       payload: {
           url: window.location.href,
+          scanRunId,
+          payloadFingerprint,
           sport: sport, 
+          league,
+          parser,
           matches: gewijzigdeWedstrijden,
           totaalGevonden: alleWedstrijden.length 
       }
@@ -97,13 +119,16 @@ const startScanRonde = () => {
   
   // SCENARIO B: STILTE (Hartslag checken)
   else if ((nu - laatsteBerichtTijd) > 30000) {
-      stuurLog('INFO', 'Hartslag', 'Geen wijzigingen, stuur keep-alive.', { matchesInMem: alleWedstrijden.length });
+      stuurLog('INFO', 'Hartslag', 'Geen wijzigingen, stuur keep-alive.', { matchesInMem: alleWedstrijden.length, scanRunId });
       
-      stuurLog('INFO', 'HEARTBEAT verstuurd', 'Keep-alive verstuurd.', { url: window.location.href });
+      stuurLog('INFO', 'HEARTBEAT verstuurd', 'Keep-alive verstuurd.', { url: window.location.href, scanRunId });
       chrome.runtime.sendMessage({
           type: 'HEARTBEAT',
           payload: {
               url: window.location.href,
+              scanRunId,
+              league,
+              parser,
               timestamp: nu
           }
       });
@@ -119,6 +144,7 @@ const startScanRonde = () => {
     sport,
     league,
     parser,
+    scanRunId,
     matchesTotal: alleWedstrijden.length,
     matchesChanged: gewijzigdeWedstrijden.length,
   });
@@ -129,6 +155,7 @@ const stuurScanStatus = (payload: {
   sport?: string;
   league?: string;
   parser?: string;
+  scanRunId?: string;
   matchesTotal: number;
   matchesChanged: number;
 }) => {
@@ -137,6 +164,7 @@ const stuurScanStatus = (payload: {
     sport: payload.sport || '',
     league: payload.league || '',
     parser: payload.parser || '',
+    scanRunId: payload.scanRunId || '',
     matchesTotal: payload.matchesTotal,
     matchesChanged: payload.matchesChanged,
   });

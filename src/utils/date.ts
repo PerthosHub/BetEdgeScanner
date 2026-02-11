@@ -4,14 +4,20 @@
  * Dit bestand is fysiek gekoppeld via een Hard Link.
  */
 
+const parseDateInput = (dateString?: string): Date | null => {
+  if (!dateString) return null;
+  const normalized = dateString.includes('T') ? dateString : `${dateString}T00:00:00`;
+  const parsed = new Date(normalized);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
 /**
  * Formatteert een datum string naar "X tijd geleden"
  * Ondersteunt zowel BEP (dagen) als BES (seconden/minuten) weergave.
  */
 export const formatTimeAgo = (dateString?: string): string => {
-  if (!dateString) return 'Onbekend';
-
-  const date = new Date(dateString.includes('T') ? dateString : `${dateString}T00:00:00`);
+  const date = parseDateInput(dateString);
+  if (!date) return 'Onbekend';
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
@@ -37,6 +43,21 @@ export const formatTimeAgo = (dateString?: string): string => {
     return weeks === 1 ? '1 week geleden' : `${weeks} weken geleden`;
   }
   return targetDate.toLocaleDateString('nl-NL');
+};
+
+/**
+ * Formatteert verstreken tijd naar mm:ss vanaf een timestamp.
+ * Wordt gebruikt voor "hoe vers is deze odd/check?" weergave.
+ */
+export const formatElapsedMmSs = (dateString?: string, nowMs: number = Date.now()): string => {
+  const date = parseDateInput(dateString);
+  if (!date) return '--:--';
+
+  const elapsedMs = Math.max(0, nowMs - date.getTime());
+  const totalSeconds = Math.floor(elapsedMs / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
 /**

@@ -1,6 +1,6 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.7 (Calculations Freeze & Build Stability)
+Versie: 3.8 (Dataflow Resilience)
 Laatste Update: 10 Feb 2026
 
 ================================================================================
@@ -9,13 +9,13 @@ Laatste Update: 10 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.24.0
-    - STATUS: ✅ Actief & In Sync (Tests Groen: 18/18)
+    - VERSIE: v3.25.0
+    - STATUS: ✅ Actief & In Sync (Tests: 18/18 | UI: Throttled)
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.5.0
-    - STATUS: ✅ Actief & In Sync (Build: OK)
+    - VERSIE: v2.6.0
+    - STATUS: ✅ Actief & In Sync (Dataflow: Retry-Safe)
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -170,9 +170,11 @@ Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.
     - De data wordt automatisch gedupliceerd voor deze brokers (bijv. BetCity).
     - **Regel:** Er wordt alleen gespiegeld naar brokers die `is_active = true` zijn.
 
-✍️ **STAP 3: Transactionele Opslag**
+✍️ **STAP 3: Transactionele Opslag & Resiliëntie**
     - Er wordt gewerkt met **Insert-Only**. Data wordt nooit overschreven.
     - Elke scanronde genereert een nieuwe `capture_id` voor 100% historie.
+    - **Retry-Logica:** Database writes hebben een automatische retry van 3x met exponential backoff.
+    - **Deduplicatie:** BES gebruikt een `payloadFingerprint` en een 30s window om dubbele writes te voorkomen.
     - Retentie: Data ouder dan 24 uur wordt automatisch verwijderd.
 
 

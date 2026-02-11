@@ -182,6 +182,7 @@ export interface OddsCapture {
   sport?: string;
   league?: string;
   capturedAt: string;
+  lastSeenAt?: string;
   source?: string;
   rawData?: unknown;
   lines?: OddsLine[];
@@ -251,6 +252,7 @@ export interface ScannedMatch {
     lineId: string;
     odds: [number, number, number];
     lastSeenAt: string;
+    lastCheckedAt: string;
   }>;
   best: CalculationResult | null;
 }
@@ -283,7 +285,7 @@ export interface ManualOutcomeInput {
   brokerId: string;
 }
 
-export { formatDateWithLabels, formatTimeAgo } from './utils/date';
+export { formatDateWithLabels, formatTimeAgo, formatElapsedMmSs } from './utils/date';
 export { normalizeTeamName, formatNameForDisplay } from './utils/normalization';
 
 // --- Monitor & Logging Types ---
@@ -305,12 +307,19 @@ export interface LogBericht {
 
 export interface ScanPayload {
     url: string;
+    scanRunId: string;
+    payloadFingerprint: string;
     sport?: string;
+    league?: string;
+    parser?: string;
     matches: Partial<OddsLine>[];
     totaalGevonden: number;
 }
 
 export interface HeartbeatPayload {
     url: string;
+    scanRunId: string;
+    league?: string;
+    parser?: string;
     timestamp: number;
 }

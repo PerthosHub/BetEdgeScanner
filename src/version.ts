@@ -7,25 +7,25 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.5.0',
+  version: '2.6.0',
   date: '2026-02-10',
-  label: 'Blok B: Build-health naar Groen',
+  label: 'Sprint C: Dataflow & Stabiliteit',
   status: 'Stable',
   detailedChanges: [
     {
-      type: 'REFACTOR' as ChangeType,
-      text: 'Volledige type-check en lint opruiming',
-      technicalDetails: 'Any types vervangen door concrete interfaces in background en content scripts. React hook dependencies gefixt in Monitor.'
+      type: 'FEATURE' as ChangeType,
+      text: 'Robuuste Dataflow (Retry & Fingerprinting)',
+      technicalDetails: 'scanRunId en payloadFingerprint toegevoegd aan ScanPayload. DatabaseSchrijver voert nu retries uit bij netwerkfouten.'
     },
     {
       type: 'FIX' as ChangeType,
-      text: 'Type-veiligheid in logging en monitor',
-      technicalDetails: 'LogBericht en ScanPayload interfaces toegevoegd en toegepast op de dataflow.'
+      text: 'Duplicate Guard & Auth Cooldown',
+      technicalDetails: '30s deduplicatie-window voor payloads. Auth-loop protectie via LOGIN_COOLDOWN_MS in sessieBeheer.'
     },
     {
-      type: 'SECURITY' as ChangeType,
-      text: 'Build hygiene verbeterd',
-      technicalDetails: 'Tsconfig configuratie aangescherpt voor erasableSyntaxOnly en enum handling.'
+      type: 'UX' as ChangeType,
+      text: 'Throttled Heartbeat Logs',
+      technicalDetails: 'Minder log-vervuiling door hartslag-meldingen te groeperen en te vertragen per broker.'
     }
   ]
 };

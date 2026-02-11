@@ -10,32 +10,88 @@ interface OpslagVerzoek {
   sport: string;
   sourceUrl: string;
   userId: string;
+  scanRunId: string;
+  payloadFingerprint: string;
 }
+
+const RETRY_ATTEMPTS = 3;
+const RETRY_BASE_DELAY_MS = 250;
+const HEARTBEAT_MISS_LOG_WINDOW_MS = 120_000;
+const laatsteHeartbeatMissLogPerBroker = new Map<string, number>();
+
+const wacht = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const withRetry = async <T>(
+  label: string,
+  scanRunId: string,
+  brokerId: string,
+  task: () => Promise<T>
+): Promise<T> => {
+  let laatsteFout: unknown;
+
+  for (let poging = 1; poging <= RETRY_ATTEMPTS; poging++) {
+    try {
+      return await task();
+    } catch (error: unknown) {
+      laatsteFout = error;
+      const bericht = error instanceof Error ? error.message : String(error);
+      const laatstePoging = poging === RETRY_ATTEMPTS;
+
+      await voegLogToe(
+        'ACHTERGROND (BREIN)',
+        laatstePoging ? 'DB write definitief mislukt' : 'DB write retry',
+        `${label} poging ${poging}/${RETRY_ATTEMPTS} ${laatstePoging ? 'mislukt' : 'faalt, opnieuw proberen'}`,
+        { scanRunId, brokerId, label, poging, error: bericht },
+        laatstePoging ? 'error' : 'warning'
+      );
+
+      if (!laatstePoging) {
+        await wacht(RETRY_BASE_DELAY_MS * poging);
+      }
+    }
+  }
+
+  throw laatsteFout;
+};
 
 export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
   try {
-    const { brokerId, brokerName, matches, userId, sport } = verzoek;
+    const { brokerId, brokerName, matches, userId, sport, scanRunId, sourceUrl, payloadFingerprint } = verzoek;
 
     if (matches.length === 0) return;
 
-    const { data: captureData, error: captureError } = await supabase
-      .from('odds_captures')
-      .insert({
-        broker_id: brokerId,
-        broker_name: brokerName,
-        user_id: userId,
-        source: 'Extension',
-        sport: sport || 'Onbekend',
-        captured_at: new Date().toISOString(),
-        last_seen_at: new Date().toISOString(),
-      })
-      .select('id')
-      .single();
+    const captureResult = await withRetry(
+      'capture_insert',
+      scanRunId,
+      brokerId,
+      async () => {
+        const { data, error } = await supabase
+          .from('odds_captures')
+          .insert({
+            broker_id: brokerId,
+            broker_name: brokerName,
+            user_id: userId,
+            source: 'Extension',
+            sport: sport || 'Onbekend',
+            captured_at: new Date().toISOString(),
+            last_seen_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
 
-    if (captureError) throw new Error(`Capture Error: ${captureError.message}`);
+        if (error) throw new Error(`Capture Error: ${error.message}`);
+        return data;
+      }
+    );
 
-    const captureId = captureData.id;
-    await voegLogToe('ACHTERGROND (BREIN)', 'Capture opgeslagen', `ID: ${captureId}`, { broker: brokerName }, 'info');
+    const captureId = captureResult.id;
+    await voegLogToe(
+      'ACHTERGROND (BREIN)',
+      'Capture opgeslagen',
+      `ID: ${captureId}`,
+      { broker: brokerName, brokerId, scanRunId, sourceUrl, payloadFingerprint },
+      'info'
+    );
 
     await chrome.storage.local.set({ [`sessie_${brokerId}`]: captureId });
 
@@ -55,9 +111,15 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
       event_url: m.eventUrl || null,
     }));
 
-    const { error: linesError } = await supabase.from('odds_lines').insert(linesToInsert);
-
-    if (linesError) throw new Error(`Lines Error: ${linesError.message}`);
+    await withRetry(
+      'lines_insert',
+      scanRunId,
+      brokerId,
+      async () => {
+        const { error } = await supabase.from('odds_lines').insert(linesToInsert);
+        if (error) throw new Error(`Lines Error: ${error.message}`);
+      }
+    );
 
     await voegLogToe(
       'ACHTERGROND (BREIN)',
@@ -66,6 +128,8 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
       {
         count: matches.length,
         broker: brokerName,
+        brokerId,
+        scanRunId,
         matches: matches.map((m) => ({
           teams: `${m.homeNameRaw} vs ${m.awayNameRaw}`,
           odds: `[${m.odds1}, ${m.oddsX}, ${m.odds2}]`,
@@ -81,29 +145,47 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
   }
 };
 
-export const updateLevensTeken = async (brokerId: string) => {
+export const updateLevensTeken = async (brokerId: string, scanRunId: string) => {
   try {
     const storageKey = `sessie_${brokerId}`;
     const storage = await chrome.storage.local.get([storageKey]);
     const captureId = storage[storageKey];
 
     if (!captureId) {
-      await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat genegeerd', 'Geen actieve sessie', { brokerId }, 'warning');
+      const nu = Date.now();
+      const laatste = laatsteHeartbeatMissLogPerBroker.get(brokerId) || 0;
+      if ((nu - laatste) > HEARTBEAT_MISS_LOG_WINDOW_MS) {
+        laatsteHeartbeatMissLogPerBroker.set(brokerId, nu);
+        await voegLogToe(
+          'ACHTERGROND (BREIN)',
+          'Heartbeat genegeerd',
+          'Geen actieve sessie',
+          { brokerId, scanRunId },
+          'warning'
+        );
+      }
       return;
     }
 
-    const { error } = await supabase
-      .from('odds_captures')
-      .update({ last_seen_at: new Date().toISOString() })
-      .eq('id', captureId);
+    await withRetry(
+      'heartbeat_update',
+      scanRunId,
+      brokerId,
+      async () => {
+        const { error } = await supabase
+          .from('odds_captures')
+          .update({ last_seen_at: new Date().toISOString() })
+          .eq('id', captureId);
 
-    if (error) throw error;
+        if (error) throw error;
+      }
+    );
 
     console.log(`Heartbeat verwerkt voor ${brokerId} (Sessie: ${captureId})`);
-    await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat verwerkt', `Sessie: ${captureId}`, { brokerId }, 'info');
+    await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat verwerkt', `Sessie: ${captureId}`, { brokerId, scanRunId }, 'info');
   } catch (error: unknown) {
     console.error('Heartbeat Fout:', error);
     const bericht = error instanceof Error ? error.message : String(error);
-    await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat fout', bericht, { brokerId }, 'error');
+    await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat fout', bericht, { brokerId, scanRunId }, 'error');
   }
 };

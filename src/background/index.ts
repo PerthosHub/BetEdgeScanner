@@ -9,6 +9,7 @@ interface ScanStatusPayload {
   sport?: string;
   league?: string;
   parser?: string;
+  scanRunId?: string;
   matchesTotal: number;
   matchesChanged: number;
   timestamp?: number;

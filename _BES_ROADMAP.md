@@ -1,13 +1,14 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.5.0
+Huidige Versie: 2.6.0
 Datum: 10 Feb 2026
 
 ---
 
 ## ✅ LAATST AFGEROND
-- [x] **v2.5.0: Build-Health Groen:** Volledige refactor van background en monitor naar strikte TypeScript interfaces. Linting en build 100% clean.
+- [x] **v2.6.0: Dataflow Resilience:** Retry-logica, fingerprinting en deduplicatie geïmplementeerd. Auth-loop protectie en throttled logging toegevoegd.
+- [x] **v2.5.0: Build-Health Groen:** Volledige refactor naar strikte TypeScript interfaces.
 - [x] **v2.4.0: Flight Tower Gold:** Cockpit v2.0 met shared normalization engine en stealth pro protocol.
 - [x] **v2.3.2: Flight Tower 2.0:** Volledige cockpit transformatie met ultra-compacte match rows en dual-streaming.
 - [x] **v2.3.0: Heartbeat Protocol:** Database updates via `last_seen_at` om data-versheid te garanderen in BEP.
@@ -62,6 +63,14 @@ Datum: 10 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.6.0] - 2026-02-10
+**"Dataflow & Stabiliteit"**
+- **FEAT:** `scanRunId` en `payloadFingerprint` toegevoegd voor end-to-end tracking.
+- **FEAT:** Database retry-engine (3 pogingen + backoff).
+- **FIX:** Payload deduplicatie (30s window) in `scanVerwerker`.
+- **FIX:** Login cooldown (30s) en in-flight login guard in `sessieBeheer`.
+- **UX:** Throttled logging voor Heartbeats en Auth warnings om ruis te verminderen.
 
 ### [2.5.0] - 2026-02-10
 **"Build-health naar Groen"**
