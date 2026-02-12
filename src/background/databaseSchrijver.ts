@@ -18,6 +18,9 @@ const RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 250;
 const HEARTBEAT_MISS_LOG_WINDOW_MS = 120_000;
 const laatsteHeartbeatMissLogPerBroker = new Map<string, number>();
+const LINE_FRESHNESS_TABLE = 'odds_line_freshness';
+let lineFreshnessSchemaEnabled = true;
+let lineFreshnessSchemaWarningLogged = false;
 
 const wacht = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -121,6 +124,39 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
       }
     );
 
+    const opgeslagenEventIds = matches
+      .map((m) => String(m.externalEventId || '').trim())
+      .filter((id) => id.length > 0);
+
+    if (opgeslagenEventIds.length > 0) {
+      try {
+        await schrijfLineFreshness(userId, brokerId, scanRunId, opgeslagenEventIds);
+      } catch (lineFreshnessError: unknown) {
+        if (lijktLineFreshnessSchemaOntbrekend(lineFreshnessError)) {
+          lineFreshnessSchemaEnabled = false;
+          if (!lineFreshnessSchemaWarningLogged) {
+            lineFreshnessSchemaWarningLogged = true;
+            await voegLogToe(
+              'ACHTERGROND (BREIN)',
+              'Line freshness uitgeschakeld',
+              'Schema mist: sla event-level versheid voorlopig over.',
+              { brokerId, scanRunId, table: LINE_FRESHNESS_TABLE },
+              'warning'
+            );
+          }
+        } else {
+          const bericht = lineFreshnessError instanceof Error ? lineFreshnessError.message : String(lineFreshnessError);
+          await voegLogToe(
+            'ACHTERGROND (BREIN)',
+            'Line freshness fout',
+            bericht,
+            { brokerId, scanRunId, seenEvents: opgeslagenEventIds.length },
+            'warning'
+          );
+        }
+      }
+    }
+
     await voegLogToe(
       'ACHTERGROND (BREIN)',
       'Opgeslagen',
@@ -145,7 +181,57 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
   }
 };
 
-export const updateLevensTeken = async (brokerId: string, scanRunId: string) => {
+const lijktLineFreshnessSchemaOntbrekend = (error: unknown): boolean => {
+  const bericht = error instanceof Error ? error.message.toLowerCase() : String(error).toLowerCase();
+  return bericht.includes(LINE_FRESHNESS_TABLE) && (
+    bericht.includes('does not exist') ||
+    bericht.includes('not found') ||
+    bericht.includes('unknown column') ||
+    bericht.includes('could not find')
+  );
+};
+
+const schrijfLineFreshness = async (
+  sourceUserId: string,
+  brokerId: string,
+  scanRunId: string,
+  seenEventIds: string[]
+) => {
+  if (!lineFreshnessSchemaEnabled) return;
+
+  const uniekeIds = Array.from(
+    new Set(
+      seenEventIds
+        .map((id) => String(id || '').trim())
+        .filter((id) => id.length > 0)
+    )
+  );
+
+  if (uniekeIds.length === 0) return;
+
+  const nuIso = new Date().toISOString();
+  const rows = uniekeIds.map((externalEventId) => ({
+    broker_id: brokerId,
+    external_event_id: externalEventId,
+    last_seen_at: nuIso,
+    scan_run_id: scanRunId,
+    source_user_id: sourceUserId,
+    updated_at: nuIso,
+  }));
+
+  const { error } = await supabase
+    .from(LINE_FRESHNESS_TABLE)
+    .upsert(rows, { onConflict: 'broker_id,external_event_id' });
+
+  if (error) throw error;
+};
+
+export const updateLevensTeken = async (
+  brokerId: string,
+  scanRunId: string,
+  sourceUserId: string,
+  seenEventIds: string[] = []
+) => {
   try {
     const storageKey = `sessie_${brokerId}`;
     const storage = await chrome.storage.local.get([storageKey]);
@@ -181,8 +267,41 @@ export const updateLevensTeken = async (brokerId: string, scanRunId: string) => 
       }
     );
 
+    try {
+      await schrijfLineFreshness(sourceUserId, brokerId, scanRunId, seenEventIds);
+    } catch (lineFreshnessError: unknown) {
+      if (lijktLineFreshnessSchemaOntbrekend(lineFreshnessError)) {
+        lineFreshnessSchemaEnabled = false;
+        if (!lineFreshnessSchemaWarningLogged) {
+          lineFreshnessSchemaWarningLogged = true;
+          await voegLogToe(
+            'ACHTERGROND (BREIN)',
+            'Line freshness uitgeschakeld',
+            'Schema mist: sla event-level versheid voorlopig over.',
+            { brokerId, scanRunId, table: LINE_FRESHNESS_TABLE },
+            'warning'
+          );
+        }
+      } else {
+        const bericht = lineFreshnessError instanceof Error ? lineFreshnessError.message : String(lineFreshnessError);
+        await voegLogToe(
+          'ACHTERGROND (BREIN)',
+          'Line freshness fout',
+          bericht,
+          { brokerId, scanRunId, seenEvents: seenEventIds.length },
+          'warning'
+        );
+      }
+    }
+
     console.log(`Heartbeat verwerkt voor ${brokerId} (Sessie: ${captureId})`);
-    await voegLogToe('ACHTERGROND (BREIN)', 'Heartbeat verwerkt', `Sessie: ${captureId}`, { brokerId, scanRunId }, 'info');
+    await voegLogToe(
+      'ACHTERGROND (BREIN)',
+      'Heartbeat verwerkt',
+      `Sessie: ${captureId}`,
+      { brokerId, scanRunId, seenEvents: seenEventIds.length },
+      'info'
+    );
   } catch (error: unknown) {
     console.error('Heartbeat Fout:', error);
     const bericht = error instanceof Error ? error.message : String(error);

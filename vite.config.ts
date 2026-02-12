@@ -9,9 +9,12 @@ const manifest = defineManifest({
   name: 'BetEdge Scanner',
   version: VERSION_INFO.version, 
   description: 'Automatische odds scanner voor BetEdge Pro',
-  permissions: ['activeTab', 'storage', 'scripting', 'tabs'],
+  permissions: ['activeTab', 'storage', 'scripting', 'tabs', 'sidePanel'],
   action: {
     default_popup: 'index.html',
+  },
+  side_panel: {
+    default_path: 'src/sidepanel/sidepanel.html',
   },
   background: {
     service_worker: 'src/background/index.ts',
@@ -41,7 +44,8 @@ export default defineConfig({
       input: {
         // Zorgt dat Vite beide HTML bestanden herkent en bouwt
         popup: 'index.html',
-        monitor: 'src/monitor/monitor.html'
+        monitor: 'src/monitor/monitor.html',
+        sidepanel: 'src/sidepanel/sidepanel.html',
       },
     },
   },

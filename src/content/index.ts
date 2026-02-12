@@ -3,9 +3,9 @@ import { parseUnibetPage } from './unibet';
 import { parseTotoPage } from './toto';
 import { parseCircusPage } from './circus';
 import { parseTonyBetPage } from './tonybet';
-import { bepaalLeagueUitUrl } from './utils';
+import { bepaalLeagueUitUrl, bepaalSportUitUrl } from './utils';
 import { stuurLog } from '../utils/logger'; // <-- NIEUW
-import { OddsLine } from '../types';
+import { OddsLine, ScanStatusPayload } from '../types';
 
 // STEALTH MODE: Start log (Alleen intern zichtbaar)
 stuurLog('INFO', 'Script Gestart', 'Content script geladen op pagina.', { url: window.location.href });
@@ -16,6 +16,12 @@ let scanTimeout: number | undefined;
 let laatsteBerichtTijd = Date.now(); 
 let laatsteStatusKey = '';
 let laatsteStatusTijd = 0;
+let isScanBezig = false;
+let wachtendeScan = false;
+const SCAN_DEBOUNCE_MS = 2000;
+const INIT_SCAN_DELAY_MS = 3000;
+const HEALTH_SCAN_INTERVAL_MS = 15000;
+const HEARTBEAT_INTERVAL_MS = 30000;
 
 const formatOdd = (odd?: number): string => (typeof odd === 'number' && Number.isFinite(odd) ? odd.toFixed(4) : 'na');
 
@@ -27,6 +33,23 @@ const maakPayloadFingerprint = (matches: Partial<OddsLine>[]): string => {
     })
     .sort();
   return regels.join('||');
+};
+
+const verzamelGezieneEventIds = (matches: Partial<OddsLine>[]): string[] => {
+  const uniekeIds = new Set<string>();
+  matches.forEach((m) => {
+    const id = (m.externalEventId || '').trim();
+    if (id) uniekeIds.add(id);
+  });
+  return Array.from(uniekeIds);
+};
+
+const bepaalParserNaamVanUrl = (): string => {
+  const url = window.location.href.toLowerCase();
+  if (url.includes('toto.nl')) return 'Toto';
+  if (url.includes('circus.nl')) return 'Circus';
+  if (url.includes('tonybet')) return 'TonyBet';
+  return 'Unibet';
 };
 
 const voerParserUit = () => {
@@ -49,10 +72,26 @@ const voerParserUit = () => {
 };
 
 const startScanRonde = () => {
+  const scanRunId = crypto.randomUUID();
+  const parserHint = bepaalParserNaamVanUrl();
+  const sportHint = bepaalSportUitUrl();
+  const leagueHint = bepaalLeagueUitUrl();
+
+  stuurScanStatus({
+    url: window.location.href,
+    sport: sportHint,
+    league: leagueHint,
+    parser: parserHint,
+    scanRunId,
+    matchesTotal: 0,
+    matchesChanged: 0,
+    scanPhase: 'SCANNING',
+  });
+
   const { matches: alleWedstrijden, sport, parser } = voerParserUit();
   const nu = Date.now();
-  const scanRunId = crypto.randomUUID();
   const league = bepaalLeagueUitUrl();
+  const seenEventIds = verzamelGezieneEventIds(alleWedstrijden);
   
   // TRACE LOGGING: Zie waarom er niets gebeurt
   if (alleWedstrijden.length === 0) {
@@ -65,6 +104,7 @@ const startScanRonde = () => {
         scanRunId,
         matchesTotal: 0,
         matchesChanged: 0,
+        scanPhase: 'READY',
       });
       return; 
   }
@@ -118,7 +158,7 @@ const startScanRonde = () => {
   } 
   
   // SCENARIO B: STILTE (Hartslag checken)
-  else if ((nu - laatsteBerichtTijd) > 30000) {
+  else if ((nu - laatsteBerichtTijd) >= HEARTBEAT_INTERVAL_MS) {
       stuurLog('INFO', 'Hartslag', 'Geen wijzigingen, stuur keep-alive.', { matchesInMem: alleWedstrijden.length, scanRunId });
       
       stuurLog('INFO', 'HEARTBEAT verstuurd', 'Keep-alive verstuurd.', { url: window.location.href, scanRunId });
@@ -129,7 +169,8 @@ const startScanRonde = () => {
               scanRunId,
               league,
               parser,
-              timestamp: nu
+              timestamp: nu,
+              seenEventIds,
           }
       });
 
@@ -147,18 +188,11 @@ const startScanRonde = () => {
     scanRunId,
     matchesTotal: alleWedstrijden.length,
     matchesChanged: gewijzigdeWedstrijden.length,
+    scanPhase: 'READY',
   });
 };
 
-const stuurScanStatus = (payload: {
-  url: string;
-  sport?: string;
-  league?: string;
-  parser?: string;
-  scanRunId?: string;
-  matchesTotal: number;
-  matchesChanged: number;
-}) => {
+const stuurScanStatus = (payload: Omit<ScanStatusPayload, 'timestamp' | 'contextReset'>) => {
   const sleutel = JSON.stringify({
     url: payload.url,
     sport: payload.sport || '',
@@ -167,6 +201,8 @@ const stuurScanStatus = (payload: {
     scanRunId: payload.scanRunId || '',
     matchesTotal: payload.matchesTotal,
     matchesChanged: payload.matchesChanged,
+    scanPhase: payload.scanPhase || '',
+    idleWaitMs: payload.idleWaitMs || 0,
   });
 
   const nu = Date.now();
@@ -186,11 +222,57 @@ const stuurScanStatus = (payload: {
   });
 };
 
+const startScanRondeVeilig = () => {
+  if (isScanBezig) {
+    wachtendeScan = true;
+    return;
+  }
+
+  isScanBezig = true;
+  try {
+    startScanRonde();
+  } finally {
+    isScanBezig = false;
+    if (wachtendeScan) {
+      wachtendeScan = false;
+      window.setTimeout(startScanRondeVeilig, 50);
+    }
+  }
+};
+
 const observer = new MutationObserver(() => {
   clearTimeout(scanTimeout);
-  scanTimeout = setTimeout(startScanRonde, 2000); 
+  stuurScanStatus({
+    url: window.location.href,
+    sport: bepaalSportUitUrl(),
+    league: bepaalLeagueUitUrl(),
+    parser: bepaalParserNaamVanUrl(),
+    matchesTotal: 0,
+    matchesChanged: 0,
+    scanPhase: 'IDLE_WAIT',
+    idleWaitMs: SCAN_DEBOUNCE_MS,
+  });
+  scanTimeout = setTimeout(startScanRondeVeilig, SCAN_DEBOUNCE_MS); 
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
 
-setTimeout(startScanRonde, 3000);
+stuurScanStatus({
+  url: window.location.href,
+  sport: bepaalSportUitUrl(),
+  league: bepaalLeagueUitUrl(),
+  parser: bepaalParserNaamVanUrl(),
+  matchesTotal: 0,
+  matchesChanged: 0,
+  scanPhase: 'BOOTING',
+});
+
+setTimeout(startScanRondeVeilig, INIT_SCAN_DELAY_MS);
+
+const healthScanInterval = window.setInterval(() => {
+  startScanRondeVeilig();
+}, HEALTH_SCAN_INTERVAL_MS);
+
+window.addEventListener('beforeunload', () => {
+  clearInterval(healthScanInterval);
+});

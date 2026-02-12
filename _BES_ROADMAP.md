@@ -1,8 +1,9 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.6.0
-Datum: 10 Feb 2026
+Huidige Versie: 2.6.5
+Datum: 12 Feb 2026
+
 
 ---
 
@@ -27,25 +28,13 @@ Datum: 10 Feb 2026
 
 ## 🚀 HUIDIGE FOCUS
 
-### 1. 🛡️ Stabiliteit van de Flight Tower
-*   **Doel:** Zorgen dat de live-stream niet crasht bij zeer hoge scan-frequenties (bijv. 100+ matches).
-*   **Actie:** Testen van de `Set<Port>` logica in `logCentrum.ts`.
+### 1. 🛡️ Stabiliteit & Observability
+*   **Flight Tower:** Zorgen dat de live-stream stabiel blijft bij 100+ matches via `Set<Port>` logica.
+*   **Performance:** CPU-impact van `MutationObserver` op zware pagina's (Circus/Toto) monitoren.
+*   **Monitor:** Real-time stabiliteit van parsers tijdens live-wedstrijden toetsen.
 
-### 2. 📉 Performance Monitoring
-*   **Doel:** Meten of de `MutationObserver` op zware pagina's (zoals de Circus homepage) te veel CPU verbruikt.
-*   **Actie:** TRACE logs analyseren op "Scan Idle" loops.
-
-
-### 2. 🛡️ Data Integriteit & Opschoning
-*   **Doel:** Voorkomen dat "verweesde" odds in de database blijven staan (wedstrijden die afgelopen zijn of verwijderd).
-*   **Actie:** Ontwikkelen van een 'cleanup' signaal of TTL (Time To Live) strategie in de database.
-
-### 2. 🧪 Stabiliteits Monitor
-*   **Doel:** Monitoren hoe de nieuwe parsers zich houden tijdens live wedstrijden en layout veranderingen.
-
-### 3. 🔗 Shared Kernel
-*   **Doel:** Datum-logica synchroniseren met BEP.
-*   **Status:** ✅ VOLTOOID via fysieke Hard Link.
+### 2. 📉 Data Lifecycle
+*   **Cleanup:** TTL-strategie ontwikkelen voor "verweesde" odds van afgelopen wedstrijden.
 
 
 ---
@@ -64,13 +53,17 @@ Datum: 10 Feb 2026
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
 
+### [2.6.5] - 2026-02-12
+**"Event Freshness Update"**
+- **FEAT:** Event-level freshness write-flow actief op `broker_id + external_event_id`.
+- **FEAT:** Heartbeat en scan-write voeden nu beide de gedeelde `last_seen_at` status.
+- **UX:** Side Panel / Monitor nu volledig stabiel als live observability-laag.
+
 ### [2.6.0] - 2026-02-10
 **"Dataflow & Stabiliteit"**
-- **FEAT:** `scanRunId` en `payloadFingerprint` toegevoegd voor end-to-end tracking.
+- **FEAT:** `scanRunId` en `payloadFingerprint` voor end-to-end tracking.
 - **FEAT:** Database retry-engine (3 pogingen + backoff).
-- **FIX:** Payload deduplicatie (30s window) in `scanVerwerker`.
-- **FIX:** Login cooldown (30s) en in-flight login guard in `sessieBeheer`.
-- **UX:** Throttled logging voor Heartbeats en Auth warnings om ruis te verminderen.
+- **FIX:** Payload deduplicatie (30s window) en login cooldown (30s).
 
 ### [2.5.0] - 2026-02-10
 **"Build-health naar Groen"**

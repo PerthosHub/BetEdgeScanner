@@ -208,6 +208,14 @@ export interface OddsLine {
   eventTimestamp?: string;
 }
 
+export interface OddsLineFreshness {
+  brokerId: string;
+  externalEventId: string;
+  lastSeenAt: string;
+  scanRunId?: string;
+  sourceUserId?: string;
+}
+
 export interface MatchTimeOverride {
   matchKey: string;
   homeNorm: string;
@@ -322,4 +330,21 @@ export interface HeartbeatPayload {
     league?: string;
     parser?: string;
     timestamp: number;
+    seenEventIds?: string[];
+}
+
+export type ScanPhase = 'BOOTING' | 'IDLE_WAIT' | 'SCANNING' | 'READY';
+
+export interface ScanStatusPayload {
+    url: string;
+    sport?: string;
+    league?: string;
+    parser?: string;
+    scanRunId?: string;
+    matchesTotal: number;
+    matchesChanged: number;
+    timestamp?: number;
+    scanPhase?: ScanPhase;
+    idleWaitMs?: number;
+    contextReset?: boolean;
 }

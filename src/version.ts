@@ -7,11 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.6.0',
-  date: '2026-02-10',
-  label: 'Sprint C: Dataflow & Stabiliteit',
+  version: '2.6.5',
+  date: '2026-02-12',
+  label: 'Sprint E1: Event-Level Freshness',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'FEATURE' as ChangeType,
+      text: 'Cross-User Event Freshness',
+      technicalDetails: 'Heartbeat en Scan feeds schrijven nu naar een gedeelde last_seen_at status per broker/event.'
+    },
     {
       type: 'FEATURE' as ChangeType,
       text: 'Robuuste Dataflow (Retry & Fingerprinting)',

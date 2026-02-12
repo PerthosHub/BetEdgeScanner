@@ -1,7 +1,13 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
 Versie: 3.8 (Dataflow Resilience)
-Laatste Update: 10 Feb 2026
+Laatste Update: 12 Feb 2026
+## 🔄 CROSS-USER FRESHNESS (Architectuur-wet)
+- **Gedeelde Waarheid:** Odds-versheid (`last_seen_at`) is een systeembrede status op `broker_id + external_event_id`.
+- **User-Agnostisch:** Het maakt niet uit WELKE gebruiker de scan doet; BEP toont de meest recente tijd voor iedereen.
+- **UI-Term:** In de interface gebruiken we strikt `Laatst gezien`.
+- **Max Leeftijd:** Filter in BEP is strikt: exact X minuten vanaf `last_seen_at`, zonder hardcoded minimum.
+- **Audit:** `source_user_id` is audit-meta, geen functionele scheiding voor zichtbaarheid.
 
 ================================================================================
 📊 SYSTEEM STATUS & VERSIES
@@ -9,13 +15,13 @@ Laatste Update: 10 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.25.0
-    - STATUS: ✅ Actief & In Sync (Tests: 18/18 | UI: Throttled)
+    - VERSIE: v3.26.0
+    - STATUS: ✅ Actief & In Sync (Freshness: Cross-User)
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.6.0
-    - STATUS: ✅ Actief & In Sync (Dataflow: Retry-Safe)
+    - VERSIE: v2.6.5
+    - STATUS: ✅ Actief & In Sync (Dataflow: Event-Level)
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -116,6 +122,9 @@ Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.
 - `is_live`          : Boolean (true/false). Geeft aan of de wedstrijd bezig is.
 - `event_url`        : De directe link naar de wedstrijd voor snelle navigatie.
 
+
+
+
 ---
 
 
@@ -177,6 +186,10 @@ Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.
     - **Deduplicatie:** BES gebruikt een `payloadFingerprint` en een 30s window om dubbele writes te voorkomen.
     - Retentie: Data ouder dan 24 uur wordt automatisch verwijderd.
 
+🔎 **STAP 4: Event-Level Freshness Write**
+- Bij elke health-scan/heartbeat meldt BES welke `external_event_id`s gezien zijn.
+- Background schrijft/upsert per broker+event de nieuwste `last_seen_at`.
+- Dit voedt BEP met betrouwbare "Laatst gezien" per broker/per wedstrijd, ook zonder odd-wijziging.
 
 ---
 
@@ -245,7 +258,7 @@ De Bet Studio is de centrale hub voor al je scans en berekeningen.
 - **Kleur:** Slate / Emerald thema.
 - **Inzet:** Rekent met het in de filters ingestelde bedrag.
 - **Doel:** Je eigen gevonden bets of scans van de extensie verwerken.
-- **Filter:** Toont scans van de laatste X minuten (standaard 20).
+- **Filter:** Toont scans van de laatste X minuten op basis van versheid (`last_seen_at`), exact volgens de ingestelde waarde.
 
 **Modus 2: Leads (QuickScan / OddsBeater)**
 - **Kleur:** Indigo thema en logo's.

@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { ScannerLog, ScannerStats } from '../utils/storage';
 import { VERSION_INFO } from '../version';
 
+const SIDE_PANEL_PATH = 'src/sidepanel/sidepanel.html';
+
 interface ScanStatus {
   url: string;
   sport?: string;
@@ -21,6 +23,7 @@ const App = () => {
   const [actieveTab, setActieveTab] = useState<'dashboard' | 'terminal'>('terminal');
   const [openLogId, setOpenLogId] = useState<string | null>(null);
   const [scanStatus, setScanStatus] = useState<ScanStatus | null>(null);
+  const [sidePanelError, setSidePanelError] = useState<string | null>(null);
 
   // Data ophalen uit storage
   useEffect(() => {
@@ -75,6 +78,67 @@ const App = () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('monitor.html') });
     };
 
+    const openSidePanel = () => {
+      if (!chrome.sidePanel?.open) {
+        setSidePanelError('Side Panel API niet beschikbaar in deze Chrome versie.');
+        return;
+      }
+
+      setSidePanelError(null);
+
+      const openMetOpties = (opties: chrome.sidePanel.OpenOptions, tabIdForSetup?: number) => {
+        const openNu = () => {
+          chrome.sidePanel
+            .open(opties)
+            .then(() => {
+              window.close();
+            })
+            .catch((error: unknown) => {
+              const bericht = error instanceof Error ? error.message : 'Kon side panel niet openen.';
+              setSidePanelError(bericht);
+              console.warn('Side panel open fout:', error);
+            });
+        };
+
+        if (typeof tabIdForSetup === 'number' && chrome.sidePanel?.setOptions) {
+          chrome.sidePanel
+            .setOptions({
+              tabId: tabIdForSetup,
+              enabled: true,
+              path: SIDE_PANEL_PATH,
+            })
+            .then(openNu)
+            .catch((error: unknown) => {
+              console.warn('Side panel setOptions fout (fallback open geprobeerd):', error);
+              openNu();
+            });
+          return;
+        }
+
+        openNu();
+      };
+
+      if (scanStatus?.tabId) {
+        openMetOpties({ tabId: scanStatus.tabId }, scanStatus.tabId);
+        return;
+      }
+
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const actieveTab = tabs?.[0];
+        if (actieveTab?.id) {
+          openMetOpties({ tabId: actieveTab.id }, actieveTab.id);
+          return;
+        }
+
+        if (typeof actieveTab?.windowId === 'number') {
+          openMetOpties({ windowId: actieveTab.windowId });
+          return;
+        }
+
+        setSidePanelError('Geen actieve tab of venster gevonden voor side panel.');
+      });
+    };
+
     return (
       <div className="w-[450px] bg-slate-900 text-slate-200 p-4 font-mono text-sm min-h-[500px]">
         {/* HEADER */}
@@ -87,6 +151,13 @@ const App = () => {
             </div>
             </div>
         <div className="flex gap-2">
+            <button
+                onClick={openSidePanel}
+                className="px-2 py-1 rounded bg-slate-800 text-cyan-300 hover:bg-slate-700 border border-slate-700"
+                title="Open Side Panel"
+            >
+                Side Panel
+            </button>
             {/* NIEUW: Knopje voor Monitor (Icoontje of Tekst) */}
             <button 
                 onClick={openMonitor}
@@ -134,6 +205,12 @@ const App = () => {
           </div>
         )}
       </div>
+
+      {sidePanelError && (
+        <div className="bg-red-900/20 border border-red-700/50 rounded p-2 mb-3 text-xs text-red-300">
+          Side Panel fout: {sidePanelError}
+        </div>
+      )}
 
       {/* VIEW: DASHBOARD */}
       {actieveTab === 'dashboard' && stats && (

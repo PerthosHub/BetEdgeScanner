@@ -152,6 +152,7 @@ export const verwerkHartslag = async (payload: HeartbeatPayload) => {
           scanRunId: payload.scanRunId,
           parser: payload.parser || 'Onbekend',
           league: payload.league || 'Onbekend',
+          seenEvents: payload.seenEventIds?.length || 0,
         },
         'info'
       );
@@ -163,7 +164,12 @@ export const verwerkHartslag = async (payload: HeartbeatPayload) => {
     const doelwitten: Broker[] = await bepaalMirrorDoelwitten(actieveBroker.id);
 
     for (const doelwit of doelwitten) {
-      await updateLevensTeken(String(doelwit.id), payload.scanRunId);
+      await updateLevensTeken(
+        String(doelwit.id),
+        payload.scanRunId,
+        userId,
+        payload.seenEventIds || []
+      );
     }
   } catch (error) {
     console.error('Fout in hartslag:', error);
