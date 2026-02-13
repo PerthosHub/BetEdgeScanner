@@ -1,5 +1,5 @@
 // FILE: src/types.ts
-// DE KANGOEROE IS GELAND
+
 // --- Betting & Calculator Types ---
 
 export enum BetMode {
@@ -25,8 +25,8 @@ export const MARKET_TYPE_LABELS: Record<MarketType, string> = {
 export type SportFilter = 'all' | 'Voetbal' | 'Tennis';
 
 // --- Navigation Types ---
-// AANGEPAST: 'quickscan' en 'OddsBeater' volledig verwijderd (v3.20+)
-export type AppTab = 'dashboard' | 'promotions' | 'resultaten' | 'history' | 'brokers' | 'entities';
+// AANGEPAST: 'quickscan' verwijderd
+export type AppTab = 'dashboard' | 'promotions' | 'resultaten' | 'history' | 'brokers'; 
 
 export interface Broker {
   id: string;
@@ -182,7 +182,6 @@ export interface OddsCapture {
   sport?: string;
   league?: string;
   capturedAt: string;
-  lastSeenAt?: string;
   source?: string;
   rawData?: unknown;
   lines?: OddsLine[];
@@ -206,14 +205,6 @@ export interface OddsLine {
   isLive?: boolean;
   canonicalEventId?: string;
   eventTimestamp?: string;
-}
-
-export interface OddsLineFreshness {
-  brokerId: string;
-  externalEventId: string;
-  lastSeenAt: string;
-  scanRunId?: string;
-  sourceUserId?: string;
 }
 
 export interface MatchTimeOverride {
@@ -260,7 +251,6 @@ export interface ScannedMatch {
     lineId: string;
     odds: [number, number, number];
     lastSeenAt: string;
-    lastCheckedAt: string;
   }>;
   best: CalculationResult | null;
 }
@@ -293,58 +283,4 @@ export interface ManualOutcomeInput {
   brokerId: string;
 }
 
-export { formatDateWithLabels, formatTimeAgo, formatElapsedMmSs } from './utils/date';
-export { normalizeTeamName, formatNameForDisplay } from './utils/normalization';
-
-// --- Monitor & Logging Types ---
-
-export type LogNiveau = 'INFO' | 'SUCCESS' | 'WARNING' | 'ERROR' | 'TRACE';
-
-export interface LogBericht {
-    id: string;
-    tijdstempel: number;
-    niveau: LogNiveau;
-    bron: {
-        url: string;
-        tabId?: number;
-    };
-    actie: string;
-    bericht: string;
-    meta?: Record<string, unknown> | null;
-}
-
-export interface ScanPayload {
-    url: string;
-    scanRunId: string;
-    payloadFingerprint: string;
-    sport?: string;
-    league?: string;
-    parser?: string;
-    matches: Partial<OddsLine>[];
-    totaalGevonden: number;
-}
-
-export interface HeartbeatPayload {
-    url: string;
-    scanRunId: string;
-    league?: string;
-    parser?: string;
-    timestamp: number;
-    seenEventIds?: string[];
-}
-
-export type ScanPhase = 'BOOTING' | 'IDLE_WAIT' | 'SCANNING' | 'READY';
-
-export interface ScanStatusPayload {
-    url: string;
-    sport?: string;
-    league?: string;
-    parser?: string;
-    scanRunId?: string;
-    matchesTotal: number;
-    matchesChanged: number;
-    timestamp?: number;
-    scanPhase?: ScanPhase;
-    idleWaitMs?: number;
-    contextReset?: boolean;
-}
+export { formatDateWithLabels, formatTimeAgo } from './utils/date';
