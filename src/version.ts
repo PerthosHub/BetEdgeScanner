@@ -7,11 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.6.5',
-  date: '2026-02-12',
-  label: 'Sprint E1: Event-Level Freshness',
+  version: '2.7.0',
+  date: '2026-02-13',
+  label: 'Sprint E2: Ecosystem Stability',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'FIX' as ChangeType,
+      text: 'Multi-Device Config Sync',
+      technicalDetails: 'Opschoning van .env.local bestanden en synchronisatie van submodules.'
+    },
     {
       type: 'FEATURE' as ChangeType,
       text: 'Cross-User Event Freshness',
