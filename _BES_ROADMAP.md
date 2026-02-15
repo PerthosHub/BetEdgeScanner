@@ -1,8 +1,8 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.7.0
-Datum: 13 Feb 2026
+Huidige Versie: 2.6.5
+Datum: 12 Feb 2026
 
 
 ---
@@ -52,11 +52,6 @@ Datum: 13 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
-
-### [2.7.0] - 2026-02-13
-**"Ecosystem Stability Sync"**
-- **SYNC:** Types en configuratie gesynchroniseerd met BEP v3.21.0.
-- **FIX:** `.env.local` opschoning en Git identiteit herstel.
 
 ### [2.6.5] - 2026-02-12
 **"Event Freshness Update"**

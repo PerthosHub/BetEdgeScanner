@@ -1,7 +1,13 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.4 (Simplification Update)
-Laatste Update: 01 Feb 2026
+Versie: 3.8 (Dataflow Resilience)
+Laatste Update: 12 Feb 2026
+## 🔄 CROSS-USER FRESHNESS (Architectuur-wet)
+- **Gedeelde Waarheid:** Odds-versheid (`last_seen_at`) is een systeembrede status op `broker_id + external_event_id`.
+- **User-Agnostisch:** Het maakt niet uit WELKE gebruiker de scan doet; BEP toont de meest recente tijd voor iedereen.
+- **UI-Term:** In de interface gebruiken we strikt `Laatst gezien`.
+- **Max Leeftijd:** Filter in BEP is strikt: exact X minuten vanaf `last_seen_at`, zonder hardcoded minimum.
+- **Audit:** `source_user_id` is audit-meta, geen functionele scheiding voor zichtbaarheid.
 
 ================================================================================
 📊 SYSTEEM STATUS & VERSIES
@@ -9,13 +15,13 @@ Laatste Update: 01 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.20.0
-    - STATUS: ✅ Actief & In Sync
+    - VERSIE: v3.26.0
+    - STATUS: ✅ Actief & In Sync (Freshness: Cross-User)
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.1.0
-    - STATUS: ✅ Actief & In Sync
+    - VERSIE: v2.6.5
+    - STATUS: ✅ Actief & In Sync (Dataflow: Event-Level)
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -36,12 +42,15 @@ Laatste Update: 01 Feb 2026
 │   ├── 📄 `sessieBeheer.ts`  # Beveiliging: Regelt Auth & User ID voor Supabase.
 │   ├── 📄 `configuratie.ts`  # Instellingen: Haalt broker-lijst op uit de database.
 │   ├── 📄 `scanVerwerker.ts` # Logica: Coördineert data & Mirror Strategy.
-│   └── 📄 `database.ts`      # Schrijver: Verantwoordelijk voor de SQL inserts.
+│   ├── 📄 `databaseSchrijver.ts` # Schrijver: Verantwoordelijk voor de SQL inserts.
+│   └── 📄 `logCentrum.ts`    # Flight Tower: Real-time monitoring hub.
 │
 ├── 📂 `content/`             # De 'Ogen' - Draait direct op de bookmaker site
 │   ├── 📄 `index.ts`         # Router: Herkent de URL en kiest de juiste scanner.
-│   ├── 📄 `unibet.ts`        # Parser: Specifieke instructies voor Kambi sites.
-│   └── 📄 `toto.ts`          # Parser: Specifieke instructies voor TOTO.
+│   ├── 📄 `unibet.ts`        # Parser: Kambi sites (Unibet, BetCity).
+│   ├── 📄 `toto.ts`          # Parser: TOTO (Nederlandse Loterij).
+│   ├── 📄 `circus.ts`        # Parser: Gaming1 platform.
+│   └── 📄 `tonybet.ts`       # Parser: SoftLabs platform.
 │
 ├── 📂 `lib/`                 # Koppelingen: Bevat o.a. de Supabase Client.
 ├── 📂 `utils/`               # Hulptools: Voor tijdnotaties, logs en opslag.
@@ -113,6 +122,9 @@ Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.
 - `is_live`          : Boolean (true/false). Geeft aan of de wedstrijd bezig is.
 - `event_url`        : De directe link naar de wedstrijd voor snelle navigatie.
 
+
+
+
 ---
 
 
@@ -167,17 +179,25 @@ Bevat de feitelijke odds. Deze regels zijn gekoppeld aan de `capture_id`.
     - De data wordt automatisch gedupliceerd voor deze brokers (bijv. BetCity).
     - **Regel:** Er wordt alleen gespiegeld naar brokers die `is_active = true` zijn.
 
-✍️ **STAP 3: Transactionele Opslag**
+✍️ **STAP 3: Transactionele Opslag & Resiliëntie**
     - Er wordt gewerkt met **Insert-Only**. Data wordt nooit overschreven.
     - Elke scanronde genereert een nieuwe `capture_id` voor 100% historie.
+    - **Retry-Logica:** Database writes hebben een automatische retry van 3x met exponential backoff.
+    - **Deduplicatie:** BES gebruikt een `payloadFingerprint` en een 30s window om dubbele writes te voorkomen.
     - Retentie: Data ouder dan 24 uur wordt automatisch verwijderd.
 
+🔎 **STAP 4: Event-Level Freshness Write**
+- Bij elke health-scan/heartbeat meldt BES welke `external_event_id`s gezien zijn.
+- Background schrijft/upsert per broker+event de nieuwste `last_seen_at`.
+- Dit voedt BEP met betrouwbare "Laatst gezien" per broker/per wedstrijd, ook zonder odd-wijziging.
 
 ---
 
 
 
 ### 🧮 3B. REKEN LOGICA (BEP - "Einstein Engine")
+
+🛡️ **Freeze & Regressie:** De rekencore is "bevroren" en gedekt door een uitgebreide vitest suite (`calculations.test.ts`). Geen wijzigingen toegestaan zonder dat alle 18 scenario's groen zijn.
 
 🧠 **Identificatie & Target Lock**
 - Nieuwe scans komen binnen met `home_name_raw`.
@@ -230,11 +250,15 @@ Bij het importeren van screenshots (`ScreenshotInvoerModal`) checkt de app namen
 ### 4B. Bet Studio Werkwijze
 De Bet Studio is de centrale hub voor al je scans en berekeningen.
 
+**Wedstrijden Koppelen (Merging)**
+- **Doel:** Handmatig samenvoegen van verschillende schrijfwijzen (bijv. "Ajax" en "AFC Ajax") direct vanuit de lijst.
+- **Logica:** Gebruiker selecteert meerdere matches; `pairMatchesInline` maakt aliassen aan voor alle bron-teams naar het doel-team.
+
 **Personal Mode (Mijn Scans)**
 - **Kleur:** Slate / Emerald thema.
 - **Inzet:** Rekent met het in de filters ingestelde bedrag.
 - **Doel:** Je eigen gevonden bets of scans van de extensie verwerken.
-- **Filter:** Toont scans van de laatste X minuten (standaard 20).
+- **Filter:** Toont scans van de laatste X minuten op basis van versheid (`last_seen_at`), exact volgens de ingestelde waarde.
 
 **Modus 2: Leads (QuickScan / OddsBeater)**
 - **Kleur:** Indigo thema en logo's.
