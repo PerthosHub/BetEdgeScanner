@@ -7,6 +7,7 @@ interface OpslagVerzoek {
   brokerId: string;
   brokerName: string;
   matches: Partial<OddsLine>[];
+  seenEventIds?: string[];
   sport: string;
   sourceUrl: string;
   userId: string;
@@ -59,7 +60,7 @@ const withRetry = async <T>(
 
 export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
   try {
-    const { brokerId, brokerName, matches, userId, sport, scanRunId, sourceUrl, payloadFingerprint } = verzoek;
+    const { brokerId, brokerName, matches, seenEventIds, userId, sport, scanRunId, sourceUrl, payloadFingerprint } = verzoek;
 
     if (matches.length === 0) return;
 
@@ -127,10 +128,29 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
     const opgeslagenEventIds = matches
       .map((m) => String(m.externalEventId || '').trim())
       .filter((id) => id.length > 0);
+    const alleGezieneEventIds = Array.from(
+      new Set([
+        ...opgeslagenEventIds,
+        ...((seenEventIds || []).map((id) => String(id || '').trim()).filter((id) => id.length > 0)),
+      ])
+    );
 
-    if (opgeslagenEventIds.length > 0) {
+    if (alleGezieneEventIds.length > 0) {
       try {
-        await schrijfLineFreshness(userId, brokerId, scanRunId, opgeslagenEventIds);
+        await schrijfLineFreshness(userId, brokerId, scanRunId, alleGezieneEventIds);
+        await voegLogToe(
+          'ACHTERGROND (BREIN)',
+          'Versheid bijgewerkt',
+          `${alleGezieneEventIds.length} events gemarkeerd als gezien.`,
+          {
+            brokerId,
+            brokerName,
+            scanRunId,
+            seenEvents: alleGezieneEventIds.length,
+            changedEvents: opgeslagenEventIds.length,
+          },
+          'info'
+        );
       } catch (lineFreshnessError: unknown) {
         if (lijktLineFreshnessSchemaOntbrekend(lineFreshnessError)) {
           lineFreshnessSchemaEnabled = false;
@@ -150,7 +170,7 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
             'ACHTERGROND (BREIN)',
             'Line freshness fout',
             bericht,
-            { brokerId, scanRunId, seenEvents: opgeslagenEventIds.length },
+            { brokerId, scanRunId, seenEvents: alleGezieneEventIds.length },
             'warning'
           );
         }

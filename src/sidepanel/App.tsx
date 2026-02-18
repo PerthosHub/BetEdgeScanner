@@ -7,6 +7,49 @@ type ScanStatusState = ScanStatusPayload & {
   tabId?: number;
 };
 
+type ScannerLog = {
+  id: string;
+  actie: string;
+  omschrijving?: string;
+  payload?: Record<string, unknown> | null;
+  type: 'info' | 'success' | 'warning' | 'error';
+  tijdstempelMs?: number;
+};
+
+type DebugStats = {
+  oddsData: number;
+  opgeslagen: number;
+  versGemarkeerd: number;
+  hartslagVerwerkt: number;
+  duplicate: number;
+  noUser: number;
+  noBroker: number;
+  dbErrors: number;
+  laatsteBlokkade: string;
+};
+
+interface DebugRowProps {
+  label: string;
+  value: number | string;
+  helpText: string;
+  valueClassName?: string;
+}
+
+const DebugRow = ({ label, value, helpText, valueClassName = '' }: DebugRowProps) => (
+  <div className="flex items-center justify-between gap-3">
+    <div className="flex items-center gap-1.5">
+      <span className="text-slate-400">{label}</span>
+      <span
+        className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-slate-700 text-[10px] text-slate-400 cursor-help"
+        title={helpText}
+      >
+        ?
+      </span>
+    </div>
+    <span className={valueClassName}>{value}</span>
+  </div>
+);
+
 const faseTitel: Record<string, string> = {
   BOOTING: 'Opstarten',
   IDLE_WAIT: 'Stealth wachtmodus',
@@ -40,6 +83,17 @@ const statusBadgeClass: Record<LiveScanMatch['status'], string> = {
 const App = () => {
   const [scanStatus, setScanStatus] = useState<ScanStatusState | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
+  const [debugStats, setDebugStats] = useState<DebugStats>({
+    oddsData: 0,
+    opgeslagen: 0,
+    versGemarkeerd: 0,
+    hartslagVerwerkt: 0,
+    duplicate: 0,
+    noUser: 0,
+    noBroker: 0,
+    dbErrors: 0,
+    laatsteBlokkade: '-',
+  });
 
   useEffect(() => {
     const haalActieveTab = () => new Promise<chrome.tabs.Tab | undefined>((resolve) => {
@@ -57,9 +111,56 @@ const App = () => {
       }
 
       const statusKey = `scan_status_${tabId}`;
-      const storage = await chrome.storage.local.get([statusKey]);
+      const storage = await chrome.storage.local.get([statusKey, 'scanner_logs']);
       const status = storage[statusKey] as ScanStatusState | undefined;
       setScanStatus(status || null);
+
+      const logs = (storage.scanner_logs as ScannerLog[] | undefined) || [];
+      const sinceMs = Date.now() - (2 * 60 * 1000);
+      const actieveHost = status?.url ? formatHost(status.url) : '';
+
+      const recenteLogs = logs.filter((log) => {
+        if (!log.tijdstempelMs || log.tijdstempelMs < sinceMs) return false;
+        const payloadUrl = typeof log.payload?.url === 'string' ? log.payload.url : '';
+        if (!actieveHost || !payloadUrl) return true;
+        return formatHost(payloadUrl) === actieveHost;
+      });
+
+      const hasAction = (log: ScannerLog, action: string): boolean => log.actie.toLowerCase() === action.toLowerCase();
+
+      const oddsData = recenteLogs.filter((l) => hasAction(l, 'Wijzigingen Gevonden')).length;
+      const opgeslagen = recenteLogs.filter((l) => hasAction(l, 'Opgeslagen')).length;
+      const versGemarkeerd = recenteLogs
+        .filter((l) => hasAction(l, 'Versheid bijgewerkt') || hasAction(l, 'Heartbeat verwerkt'))
+        .reduce((sum, log) => {
+          const n = Number(log.payload?.seenEvents);
+          return sum + (Number.isFinite(n) ? n : 0);
+        }, 0);
+      const hartslagVerwerkt = recenteLogs.filter((l) => hasAction(l, 'Heartbeat verwerkt')).length;
+      const duplicate = recenteLogs.filter((l) => hasAction(l, 'Duplicate guard')).length;
+      const noUser = recenteLogs.filter((l) => hasAction(l, 'Geen gebruiker')).length;
+      const noBroker = recenteLogs.filter((l) => hasAction(l, 'Onbekend') || hasAction(l, 'Hartslag genegeerd')).length;
+      const dbErrors = recenteLogs.filter((l) => hasAction(l, 'DB Fout') || hasAction(l, 'DB write definitief mislukt')).length;
+      const blokkeerLog = recenteLogs.find((l) =>
+        hasAction(l, 'Duplicate guard') ||
+        hasAction(l, 'Geen gebruiker') ||
+        hasAction(l, 'Onbekend') ||
+        hasAction(l, 'Hartslag genegeerd') ||
+        hasAction(l, 'DB Fout') ||
+        hasAction(l, 'DB write definitief mislukt')
+      );
+
+      setDebugStats({
+        oddsData,
+        opgeslagen,
+        versGemarkeerd,
+        hartslagVerwerkt,
+        duplicate,
+        noUser,
+        noBroker,
+        dbErrors,
+        laatsteBlokkade: blokkeerLog ? `${blokkeerLog.actie}${blokkeerLog.omschrijving ? `: ${blokkeerLog.omschrijving}` : ''}` : '-',
+      });
     };
 
     laadStatus();
@@ -172,6 +273,63 @@ const App = () => {
                 })}
               </div>
             )}
+          </div>
+
+          <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
+            <div className="text-[11px] uppercase tracking-wider text-slate-500 mb-1">Scan controle (laatste 2 minuten)</div>
+            <div className="text-[11px] text-slate-500 mb-2">Alleen voor deze pagina/broker</div>
+            <div className="space-y-1 text-xs">
+              <DebugRow
+                label="Nieuwe odds gevonden"
+                value={debugStats.oddsData}
+                helpText="Hoe vaak BES echt nieuwe of veranderde odds zag op deze pagina. Als dit 0 blijft terwijl odds zichtbaar veranderen, zit het probleem in parser/detectie."
+              />
+              <DebugRow
+                label="Succesvol naar database"
+                value={debugStats.opgeslagen}
+                valueClassName="text-emerald-300"
+                helpText="Hoe vaak de gevonden odds ook echt zijn opgeslagen in de database. Dit hoort meestal bijna gelijk te lopen met 'Nieuwe odds gevonden'."
+              />
+              <DebugRow
+                label="Gecheckt en vers gemarkeerd"
+                value={debugStats.versGemarkeerd}
+                valueClassName="text-cyan-300"
+                helpText="Aantal wedstrijden dat in de laatste 2 minuten als gezien is gemarkeerd. Dit telt ook updates zonder odds-wijziging (heartbeat)."
+              />
+              <DebugRow
+                label="Levenssignaal verwerkt"
+                value={debugStats.hartslagVerwerkt}
+                valueClassName={debugStats.hartslagVerwerkt > 0 ? 'text-cyan-300' : ''}
+                helpText="Hoe vaak BES in de laatste 2 minuten een heartbeat heeft verwerkt. Dit betekent: scanner leeft en houdt versheid bij, ook zonder nieuwe odds."
+              />
+              <DebugRow
+                label="Overgeslagen: dubbele update"
+                value={debugStats.duplicate}
+                valueClassName={debugStats.duplicate > 0 ? 'text-amber-300' : ''}
+                helpText="Zelfde update is kort daarna nog eens gezien. BES slaat die bewust over als anti-spam. Af en toe is normaal; heel vaak kan op ruis of te snelle herhaling wijzen."
+              />
+              <DebugRow
+                label="Niet ingelogd"
+                value={debugStats.noUser}
+                valueClassName={debugStats.noUser > 0 ? 'text-amber-300' : ''}
+                helpText="BES probeerde te schrijven zonder geldige scanner-user login. Dan komt er niets in BEP. Controleer auth/login status."
+              />
+              <DebugRow
+                label="Geen broker-koppeling"
+                value={debugStats.noBroker}
+                valueClassName={debugStats.noBroker > 0 ? 'text-amber-300' : ''}
+                helpText="Pagina-URL kon niet gekoppeld worden aan een actieve broker. Check website-url, group en isActive in brokerconfig."
+              />
+              <DebugRow
+                label="Database fout"
+                value={debugStats.dbErrors}
+                valueClassName={debugStats.dbErrors > 0 ? 'text-red-300' : ''}
+                helpText="Schrijven naar database is mislukt (bijv. netwerk, schema, permissie of query-fout). Kijk monitor/Supabase logs voor de exacte fout."
+              />
+              <div className="pt-2 text-slate-500">
+                Laatste blokkade: <span className="text-slate-300">{debugStats.laatsteBlokkade}</span>
+              </div>
+            </div>
           </div>
 
           <div className="text-[11px] text-slate-500 px-1">

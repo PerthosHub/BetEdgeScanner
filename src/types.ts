@@ -322,6 +322,7 @@ export interface ScanPayload {
     parser?: string;
     matches: Partial<OddsLine>[];
     totaalGevonden: number;
+    seenEventIds?: string[];
 }
 
 export interface HeartbeatPayload {

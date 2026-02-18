@@ -5,6 +5,7 @@ export type LogBron = 'CONTENT (DOM)' | 'ACHTERGROND (BREIN)' | 'POPUP (UI)' | '
 export interface ScannerLog {
     id: string; // Unieke ID voor React rendering
     tijdstip: string;
+    tijdstempelMs: number;
     bron: LogBron;
     actie: string; // Korte titel (NL)
     omschrijving?: string; // Lange tekst (NL)
@@ -34,6 +35,7 @@ export const voegLogToe = async (
     const logItem: ScannerLog = {
         id: crypto.randomUUID(),
         tijdstip: new Date().toLocaleTimeString(),
+        tijdstempelMs: Date.now(),
         bron,
         actie,
         omschrijving,

@@ -155,7 +155,7 @@ const startScanRonde = () => {
   
   // SCENARIO A: NIEUWS (Direct versturen)
   if (gewijzigdeWedstrijden.length > 0) {
-    const payloadFingerprint = maakPayloadFingerprint(gewijzigdeWedstrijden);
+    const payloadFingerprint = maakPayloadFingerprint(alleWedstrijden);
 
     // Loggen via centrale (zichtbaar in monitor)
     stuurLog('SUCCESS', 'Wijzigingen Gevonden', `${gewijzigdeWedstrijden.length} nieuwe odds gevonden.`, {
@@ -169,7 +169,12 @@ const startScanRonde = () => {
         }))
     });
 
-    stuurLog('INFO', 'ODDS_DATA verstuurd', `${gewijzigdeWedstrijden.length} wijzigingen gestuurd.`, { url: window.location.href, scanRunId, payloadFingerprint });
+    stuurLog(
+      'INFO',
+      'ODDS_DATA verstuurd',
+      `${alleWedstrijden.length} wedstrijden gestuurd (${gewijzigdeWedstrijden.length} gewijzigd).`,
+      { url: window.location.href, scanRunId, payloadFingerprint }
+    );
     chrome.runtime.sendMessage({
       type: 'ODDS_DATA', 
       payload: {
@@ -179,8 +184,9 @@ const startScanRonde = () => {
           sport: sport, 
           league,
           parser,
-          matches: gewijzigdeWedstrijden,
-          totaalGevonden: alleWedstrijden.length 
+          matches: alleWedstrijden,
+          totaalGevonden: alleWedstrijden.length,
+          seenEventIds,
       }
     });
 
