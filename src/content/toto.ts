@@ -21,6 +21,46 @@ const verwerkTotoTijdstip = (tekst: string): { datum?: string, tijd?: string } =
     return {};
 };
 
+const vindPrimaireMarkt = (rij: Element): Element | null => {
+  const markten = Array.from(rij.querySelectorAll('div[class*="_market_"]'));
+  if (markten.length === 0) return null;
+
+  // Voorkeur: Winner/Resultaat markt, omdat die stabiel is voor 2-way/3-way.
+  const voorkeursMarkt = markten.find((markt) => {
+    const headerTekst = (markt.querySelector('div[class*="_header_"]')?.textContent || '').toLowerCase();
+    return headerTekst.includes('winnaar') || headerTekst.includes('resultaat');
+  });
+
+  return voorkeursMarkt || markten[0];
+};
+
+const leesOddsUitMarkt = (markt: Element): { odd1?: number; oddX?: number; odd2?: number } => {
+  const buttonLijst = Array.from(markt.querySelectorAll('button[index]'));
+  if (buttonLijst.length === 0) return {};
+
+  const oddsOpLabel: Record<string, number | undefined> = {};
+
+  buttonLijst.forEach((btn) => {
+    const labelElement = btn.querySelector('[class*="_label_"]');
+    const valueElement = btn.querySelector('[class*="_value_"]');
+
+    const ruweLabel = (labelElement?.textContent || '').trim().toUpperCase();
+    const ruweOddTekst = (valueElement?.textContent || btn.textContent || '').trim();
+    const oddWaarde = parseOddWaarde(ruweOddTekst);
+
+    if (!oddWaarde || oddWaarde <= 1) return;
+    if (ruweLabel === '1' || ruweLabel === 'X' || ruweLabel === '2') {
+      oddsOpLabel[ruweLabel] = oddWaarde;
+    }
+  });
+
+  return {
+    odd1: oddsOpLabel['1'],
+    oddX: oddsOpLabel['X'],
+    odd2: oddsOpLabel['2'],
+  };
+};
+
 export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string } => {
   const resultaten: Partial<OddsLine>[] = [];
   
@@ -43,29 +83,16 @@ export const parseTotoPage = (): { matches: Partial<OddsLine>[], sport?: string 
       const rijTekst = (rij as HTMLElement).innerText || "";
       const { datum, tijd } = verwerkTotoTijdstip(rijTekst);
 
-      // 4. Odds Ophalen (Specifiek voor TOTO via buttons)
-      const haalOddOp = (outcomeIndex: string): number | undefined => {
-          const btn = rij.querySelector(`button[index="${outcomeIndex}"]`);
-          if (!btn) return undefined;
+      const primaireMarkt = vindPrimaireMarkt(rij);
+      if (!primaireMarkt) return;
 
-          // Probeer value container of fallback naar button text
-          const waardeElement = btn.querySelector('[class*="_value_"]');
-          const ruweTekst = waardeElement ? waardeElement.textContent : btn.textContent;
-          
-          // STAP 2: Conversie via Utils
-          return parseOddWaarde(ruweTekst);
-      };
-
-      const odd1 = haalOddOp("0");
-      const oddX = haalOddOp("1");
-      const odd2 = haalOddOp("2");
+      const { odd1, oddX, odd2: odd2Raw } = leesOddsUitMarkt(primaireMarkt);
+      const odd2 = odd2Raw;
 
       if (!odd1 || !odd2) return;
 
       // STAP 3: Markt Type via Utils
-      // Let op: Bij Toto geeft haalOddOp 'undefined' terug als oddX niet bestaat, 
-      // dus we tellen handmatig hoeveel odds we hebben.
-      const aantalOdds = oddX ? 3 : 2;
+      const aantalOdds = oddX && odd2Raw ? 3 : 2;
       const marktType = bepaalMarktType(aantalOdds, gedetecteerdeSport);
 
       // STAP 4: ID via Utils (of fallback naar TOTO ID uit URL)
