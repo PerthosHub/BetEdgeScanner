@@ -5,7 +5,7 @@ import { parseCircusPage } from './circus';
 import { parseTonyBetPage } from './tonybet';
 import { bepaalLeagueUitUrl, bepaalSportUitUrl } from './utils';
 import { stuurLog } from '../utils/logger'; // <-- NIEUW
-import { OddsLine, ScanStatusPayload } from '../types';
+import { LiveScanMatch, OddsLine, ScanStatusPayload } from '../types';
 
 // STEALTH MODE: Start log (Alleen intern zichtbaar)
 stuurLog('INFO', 'Script Gestart', 'Content script geladen op pagina.', { url: window.location.href });
@@ -24,6 +24,15 @@ const HEALTH_SCAN_INTERVAL_MS = 15000;
 const HEARTBEAT_INTERVAL_MS = 30000;
 
 const formatOdd = (odd?: number): string => (typeof odd === 'number' && Number.isFinite(odd) ? odd.toFixed(4) : 'na');
+
+const maakWedstrijdSleutel = (wedstrijd: Partial<OddsLine>): string => {
+  const eventId = (wedstrijd.externalEventId || '').trim();
+  if (eventId) return eventId;
+  const home = (wedstrijd.homeNameRaw || '').trim().toLowerCase();
+  const away = (wedstrijd.awayNameRaw || '').trim().toLowerCase();
+  const market = wedstrijd.marketType || 'onbekend';
+  return `${home}|${away}|${market}`;
+};
 
 const maakPayloadFingerprint = (matches: Partial<OddsLine>[]): string => {
   const regels = matches
@@ -105,21 +114,42 @@ const startScanRonde = () => {
         matchesTotal: 0,
         matchesChanged: 0,
         scanPhase: 'READY',
+        liveMatches: [],
       });
       return; 
   }
 
   const gewijzigdeWedstrijden: Partial<OddsLine>[] = [];
+  const liveMatches: LiveScanMatch[] = [];
 
   // 1. Check op wijzigingen (Diffing)
   alleWedstrijden.forEach((wedstrijd) => {
-    const id = wedstrijd.externalEventId;
-    if (!id) return;
+    const sleutel = maakWedstrijdSleutel(wedstrijd);
     const vingerafdruk = `${wedstrijd.odds1}-${wedstrijd.oddsX}-${wedstrijd.odds2}`;
+    const vorigeVingerafdruk = laatstBekendeOdds.get(sleutel);
+    const status =
+      vorigeVingerafdruk === undefined
+        ? 'NIEUW'
+        : vorigeVingerafdruk !== vingerafdruk
+          ? 'VERNIEUWD'
+          : 'GECHECKT';
 
-    if (laatstBekendeOdds.get(id) !== vingerafdruk) {
+    liveMatches.push({
+      key: sleutel,
+      externalEventId: wedstrijd.externalEventId,
+      homeNameRaw: wedstrijd.homeNameRaw,
+      awayNameRaw: wedstrijd.awayNameRaw,
+      odds1: wedstrijd.odds1,
+      oddsX: wedstrijd.oddsX,
+      odds2: wedstrijd.odds2,
+      marketType: wedstrijd.marketType,
+      status,
+    });
+
+    if (vorigeVingerafdruk !== vingerafdruk) {
+        laatstBekendeOdds.set(sleutel, vingerafdruk);
+        if (!wedstrijd.externalEventId) return;
         gewijzigdeWedstrijden.push(wedstrijd);
-        laatstBekendeOdds.set(id, vingerafdruk);
     }
   });
   
@@ -189,6 +219,7 @@ const startScanRonde = () => {
     matchesTotal: alleWedstrijden.length,
     matchesChanged: gewijzigdeWedstrijden.length,
     scanPhase: 'READY',
+    liveMatches,
   });
 };
 
@@ -203,6 +234,7 @@ const stuurScanStatus = (payload: Omit<ScanStatusPayload, 'timestamp' | 'context
     matchesChanged: payload.matchesChanged,
     scanPhase: payload.scanPhase || '',
     idleWaitMs: payload.idleWaitMs || 0,
+    liveMatches: payload.liveMatches || [],
   });
 
   const nu = Date.now();

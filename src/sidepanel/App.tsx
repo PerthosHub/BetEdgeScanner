@@ -1,5 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-import type { ScanStatusPayload } from '../types';
+import type { LiveScanMatch, ScanStatusPayload } from '../types';
 import { VERSION_INFO } from '../version';
 
 type ScanStatusState = ScanStatusPayload & {
@@ -27,6 +27,14 @@ const formatSecondsSince = (timestamp: number | undefined, nowMs: number): strin
   if (!timestamp) return '-';
   const seconds = Math.max(0, Math.floor((nowMs - timestamp) / 1000));
   return `${seconds}s geleden`;
+};
+
+const formatOdd = (odd?: number): string => (typeof odd === 'number' && Number.isFinite(odd) ? odd.toFixed(2) : '-');
+
+const statusBadgeClass: Record<LiveScanMatch['status'], string> = {
+  NIEUW: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-300',
+  VERNIEUWD: 'border-sky-500/40 bg-sky-500/10 text-sky-300',
+  GECHECKT: 'border-slate-700 bg-slate-800/80 text-slate-300',
 };
 
 const App = () => {
@@ -150,6 +158,41 @@ const App = () => {
                 <span>{scanStatus.matchesChanged}</span>
               </div>
             </div>
+          </div>
+
+          <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
+            <div className="flex items-center justify-between gap-3 mb-2">
+              <div className="text-[11px] uppercase tracking-wider text-slate-500">Live payload</div>
+              <div className="text-[11px] text-slate-400">
+                {scanStatus.liveMatches?.length ?? 0} / {scanStatus.matchesTotal}
+              </div>
+            </div>
+
+            {!scanStatus.liveMatches || scanStatus.liveMatches.length === 0 ? (
+              <div className="text-xs text-slate-500">Nog geen wedstrijden in deze scanronde.</div>
+            ) : (
+              <div className="max-h-[360px] overflow-y-auto space-y-2 pr-1">
+                {scanStatus.liveMatches.map((match) => {
+                  const isThreeWay = typeof match.oddsX === 'number';
+                  const oddsLabel = isThreeWay
+                    ? `1: ${formatOdd(match.odds1)} | X: ${formatOdd(match.oddsX)} | 2: ${formatOdd(match.odds2)}`
+                    : `1: ${formatOdd(match.odds1)} | 2: ${formatOdd(match.odds2)}`;
+                  return (
+                    <div key={match.key} className="rounded-md border border-slate-800 bg-slate-950/60 p-2">
+                      <div className="text-xs text-slate-200 truncate">
+                        {match.homeNameRaw || '?'} - {match.awayNameRaw || '?'}
+                      </div>
+                      <div className="mt-1 flex items-center justify-between gap-2">
+                        <div className="text-[11px] text-slate-400 truncate">{oddsLabel}</div>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded border font-semibold ${statusBadgeClass[match.status]}`}>
+                          {match.status}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <div className="text-[11px] text-slate-500 px-1">

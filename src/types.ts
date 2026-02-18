@@ -335,6 +335,20 @@ export interface HeartbeatPayload {
 
 export type ScanPhase = 'BOOTING' | 'IDLE_WAIT' | 'SCANNING' | 'READY';
 
+export type LiveScanMatchStatus = 'NIEUW' | 'VERNIEUWD' | 'GECHECKT';
+
+export interface LiveScanMatch {
+    key: string;
+    externalEventId?: string;
+    homeNameRaw?: string;
+    awayNameRaw?: string;
+    odds1?: number;
+    oddsX?: number;
+    odds2?: number;
+    marketType?: MarketType;
+    status: LiveScanMatchStatus;
+}
+
 export interface ScanStatusPayload {
     url: string;
     sport?: string;
@@ -347,4 +361,5 @@ export interface ScanStatusPayload {
     scanPhase?: ScanPhase;
     idleWaitMs?: number;
     contextReset?: boolean;
+    liveMatches?: LiveScanMatch[];
 }
