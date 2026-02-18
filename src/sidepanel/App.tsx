@@ -39,7 +39,6 @@ const statusBadgeClass: Record<LiveScanMatch['status'], string> = {
 
 const App = () => {
   const [scanStatus, setScanStatus] = useState<ScanStatusState | null>(null);
-  const [actieveTabId, setActieveTabId] = useState<number | null>(null);
   const [nowMs, setNowMs] = useState(() => Date.now());
 
   useEffect(() => {
@@ -53,12 +52,9 @@ const App = () => {
       const tabId = actieveTab?.id;
 
       if (!tabId) {
-        setActieveTabId(null);
         setScanStatus(null);
         return;
       }
-
-      setActieveTabId(tabId);
 
       const statusKey = `scan_status_${tabId}`;
       const storage = await chrome.storage.local.get([statusKey]);
@@ -82,7 +78,7 @@ const App = () => {
       : Math.max(0, scanStatus.idleWaitMs - (nowMs - scanStatus.updatedAt));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 font-mono">
+    <div className="h-screen overflow-y-auto bg-slate-950 text-slate-100 p-4 font-mono">
       <header className="border-b border-slate-800 pb-3 mb-4">
         <h1 className="text-lg font-bold text-emerald-400">BetEdge Side Panel</h1>
         <div className="text-xs text-slate-400 mt-1">v{VERSION_INFO.version} | Stealth debounce: 2s</div>
@@ -97,12 +93,7 @@ const App = () => {
       {scanStatus && (
         <div className="space-y-3">
           <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
-            <div className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Actieve scanner</div>
             <div className="space-y-2 text-sm">
-              <div className="flex justify-between gap-3">
-                <span className="text-slate-400">Tab</span>
-                <span>{actieveTabId ?? '-'}</span>
-              </div>
               <div className="flex justify-between gap-3">
                 <span className="text-slate-400">Host</span>
                 <span className="truncate max-w-[220px] text-right">{formatHost(scanStatus.url)}</span>
@@ -117,6 +108,22 @@ const App = () => {
                   <span className="text-amber-300">{Math.ceil(remainingIdleMs / 1000)}s</span>
                 </div>
               )}
+            </div>
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-400">Sport</span>
+                <span>{scanStatus.sport || 'Onbekend'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-400">League</span>
+                <span>{scanStatus.league || 'Onbekend'}</span>
+              </div>
+              <div className="flex justify-between gap-3">
+                <span className="text-slate-400">Wedstrijden</span>
+                <span className={scanStatus.matchesTotal > 0 ? 'text-emerald-400' : 'text-slate-300'}>
+                  {scanStatus.matchesTotal}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -133,34 +140,6 @@ const App = () => {
           )}
 
           <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
-            <div className="text-[11px] uppercase tracking-wider text-slate-500 mb-2">Detectie</div>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between gap-3">
-                <span className="text-slate-400">Parser</span>
-                <span>{scanStatus.parser || 'Onbekend'}</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-slate-400">Sport</span>
-                <span>{scanStatus.sport || 'Onbekend'}</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-slate-400">League</span>
-                <span>{scanStatus.league || 'Onbekend'}</span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-slate-400">Wedstrijden</span>
-                <span className={scanStatus.matchesTotal > 0 ? 'text-emerald-400' : 'text-slate-300'}>
-                  {scanStatus.matchesTotal}
-                </span>
-              </div>
-              <div className="flex justify-between gap-3">
-                <span className="text-slate-400">Wijzigingen</span>
-                <span>{scanStatus.matchesChanged}</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-slate-800 bg-slate-900 p-3">
             <div className="flex items-center justify-between gap-3 mb-2">
               <div className="text-[11px] uppercase tracking-wider text-slate-500">Live payload</div>
               <div className="text-[11px] text-slate-400">
@@ -171,7 +150,7 @@ const App = () => {
             {!scanStatus.liveMatches || scanStatus.liveMatches.length === 0 ? (
               <div className="text-xs text-slate-500">Nog geen wedstrijden in deze scanronde.</div>
             ) : (
-              <div className="max-h-[360px] overflow-y-auto space-y-2 pr-1">
+              <div className="space-y-2">
                 {scanStatus.liveMatches.map((match) => {
                   const isThreeWay = typeof match.oddsX === 'number';
                   const oddsLabel = isThreeWay
