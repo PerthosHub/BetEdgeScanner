@@ -1,13 +1,14 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.6.5
-Datum: 12 Feb 2026
+Huidige Versie: 2.7.0
+Datum: 18 Feb 2026
 
 
 ---
 
 ## ✅ LAATST AFGEROND
+- [x] **v2.7.0: Ecosystem Polish:** Versie-sync met BEP v3.27.0 en submodule onderhoud.
 - [x] **v2.6.0: Dataflow Resilience:** Retry-logica, fingerprinting en deduplicatie geïmplementeerd. Auth-loop protectie en throttled logging toegevoegd.
 - [x] **v2.5.0: Build-Health Groen:** Volledige refactor naar strikte TypeScript interfaces.
 - [x] **v2.4.0: Flight Tower Gold:** Cockpit v2.0 met shared normalization engine en stealth pro protocol.
@@ -52,6 +53,11 @@ Datum: 12 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.7.0] - 2026-02-18
+**"Ecosystem Sync Update"**
+- **SYNC:** Versie gelijkgetrokken met BetEdge Pro v3.27.0.
+- **TECH:** Submodule pointers en repository hygiene.
 
 ### [2.6.5] - 2026-02-12
 **"Event Freshness Update"**

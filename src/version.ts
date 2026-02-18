@@ -7,11 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.6.5',
-  date: '2026-02-12',
-  label: 'Sprint E1: Event-Level Freshness',
+  version: '2.7.0',
+  date: '2026-02-18',
+  label: 'Sprint E2: Ecosystem Polish',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'Ecosystem Alignment',
+      technicalDetails: 'Versie-sync met BEP v3.27.0 en submodule onderhoud.'
+    },
     {
       type: 'FEATURE' as ChangeType,
       text: 'Cross-User Event Freshness',
