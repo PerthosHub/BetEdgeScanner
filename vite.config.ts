@@ -26,7 +26,8 @@ const manifest = defineManifest({
         'https://*.unibet.nl/*', 
         'https://*.toto.nl/*',
         'https://*.circus.nl/*',
-        'https://*.tonybet.nl/*'
+        'https://*.tonybet.nl/*',
+        'https://*.betcity.nl/*'
       ], 
       js: ['src/content/index.ts'],
       run_at: 'document_idle' 

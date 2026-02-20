@@ -1,4 +1,4 @@
-﻿import { supabase } from '../lib/supabase';
+import { supabase } from '../lib/supabase';
 import { Broker } from '../types';
 import { voegLogToe } from '../utils/storage';
 
@@ -54,26 +54,4 @@ export const zoekBrokerBijUrl = async (url: string): Promise<Broker | undefined>
   return brokers.find(
     (b) => b.website && cleanUrl.includes(b.website.toLowerCase().replace(/https?:\/\/(www\.)?/, ''))
   );
-};
-
-export const bepaalMirrorDoelwitten = async (bronBrokerId: string): Promise<Broker[]> => {
-  const storage = await chrome.storage.local.get(['brokers']);
-  const brokers: Broker[] = (storage.brokers as Broker[]) || [];
-
-  const source = brokers.find((b) => b.id === bronBrokerId);
-
-  if (!source || !source.group) {
-    console.warn(`Kan niet spiegelen: Bron broker of groep onbekend (ID: ${bronBrokerId})`);
-    return source ? [source] : [];
-  }
-
-  const sourceGroup = source.group.toLowerCase().trim();
-
-  const targets = brokers.filter(
-    (b) => b.isActive && b.group && b.group.toLowerCase().trim() === sourceGroup
-  );
-
-  console.log(`Mirror Check: Bron='${source.name}' (${sourceGroup}). Gevonden targets: ${targets.map((t) => t.name).join(', ')}`);
-
-  return targets.length > 0 ? targets : [source];
 };

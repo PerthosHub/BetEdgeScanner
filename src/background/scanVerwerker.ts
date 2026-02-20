@@ -1,8 +1,8 @@
-﻿import { zoekBrokerBijUrl, bepaalMirrorDoelwitten } from './configuratieLader';
+import { zoekBrokerBijUrl } from './configuratieLader';
 import { krijgGeldigeGebruikerId } from './sessieBeheer';
 import { verwerkEnSlaOp, updateLevensTeken } from './databaseSchrijver';
 import { voegLogToe } from '../utils/storage';
-import { Broker, ScanPayload, HeartbeatPayload } from '../types';
+import { ScanPayload, HeartbeatPayload } from '../types';
 
 const DEDUPE_WINDOW_MS = 30_000;
 const recentePayloads = new Map<string, number>();
@@ -96,33 +96,36 @@ export const verwerkInkomendeScan = async (payload: ScanPayload) => {
     chrome.action.setBadgeText({ text: 'SCAN' });
     chrome.action.setBadgeBackgroundColor({ color: '#10b981' });
 
-    const doelwitten: Broker[] = await bepaalMirrorDoelwitten(actieveBroker.id);
-
-    for (const doelwit of doelwitten) {
-      if (isDubbelePayloadBinnenWindow(String(doelwit.id), payload)) {
-        await voegLogToe(
-          'ACHTERGROND (BREIN)',
-          'Duplicate guard',
-          `Dubbele payload overgeslagen voor ${doelwit.name}`,
-          { brokerId: doelwit.id, scanRunId: payload.scanRunId, dedupeWindowMs: DEDUPE_WINDOW_MS },
-          'warning'
-        );
-        continue;
-      }
-
-      await voegLogToe('ACHTERGROND (BREIN)', 'Opslaan gestart', doelwit.name, { brokerId: doelwit.id, scanRunId: payload.scanRunId }, 'info');
-      await verwerkEnSlaOp({
-        brokerId: String(doelwit.id),
-        brokerName: String(doelwit.name),
-        matches: payload.matches,
-        seenEventIds: payload.seenEventIds || [],
-        sport: payload.sport || 'Onbekend',
-        sourceUrl: payload.url,
-        userId,
-        scanRunId: payload.scanRunId,
-        payloadFingerprint: payload.payloadFingerprint,
-      });
+    if (isDubbelePayloadBinnenWindow(String(actieveBroker.id), payload)) {
+      await voegLogToe(
+        'ACHTERGROND (BREIN)',
+        'Duplicate guard',
+        `Dubbele payload overgeslagen voor ${actieveBroker.name}`,
+        { brokerId: actieveBroker.id, scanRunId: payload.scanRunId, dedupeWindowMs: DEDUPE_WINDOW_MS },
+        'warning'
+      );
+      return;
     }
+
+    await voegLogToe(
+      'ACHTERGROND (BREIN)',
+      'Opslaan gestart',
+      actieveBroker.name,
+      { brokerId: actieveBroker.id, scanRunId: payload.scanRunId },
+      'info'
+    );
+
+    await verwerkEnSlaOp({
+      brokerId: String(actieveBroker.id),
+      brokerName: String(actieveBroker.name),
+      matches: payload.matches,
+      seenEventIds: payload.seenEventIds || [],
+      sport: payload.sport || 'Onbekend',
+      sourceUrl: payload.url,
+      userId,
+      scanRunId: payload.scanRunId,
+      payloadFingerprint: payload.payloadFingerprint,
+    });
   } catch (error) {
     console.error('Fout in verwerking:', error);
     await voegLogToe('ACHTERGROND (BREIN)', 'Verwerking fout', (error as Error).message, null, 'error');
@@ -162,16 +165,12 @@ export const verwerkHartslag = async (payload: HeartbeatPayload) => {
     chrome.action.setBadgeText({ text: 'IDLE' });
     chrome.action.setBadgeBackgroundColor({ color: '#3b82f6' });
 
-    const doelwitten: Broker[] = await bepaalMirrorDoelwitten(actieveBroker.id);
-
-    for (const doelwit of doelwitten) {
-      await updateLevensTeken(
-        String(doelwit.id),
-        payload.scanRunId,
-        userId,
-        payload.seenEventIds || []
-      );
-    }
+    await updateLevensTeken(
+      String(actieveBroker.id),
+      payload.scanRunId,
+      userId,
+      payload.seenEventIds || []
+    );
   } catch (error) {
     console.error('Fout in hartslag:', error);
     await voegLogToe('ACHTERGROND (BREIN)', 'Hartslag fout', (error as Error).message, null, 'error');

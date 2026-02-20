@@ -3,6 +3,7 @@ import { parseUnibetPage } from './unibet';
 import { parseTotoPage } from './toto';
 import { parseCircusPage } from './circus';
 import { parseTonyBetPage } from './tonybet';
+import { parseBetcityPage } from './betcity';
 import { bepaalLeagueUitUrl, bepaalSportUitUrl } from './utils';
 import { stuurLog } from '../utils/logger'; // <-- NIEUW
 import { LiveScanMatch, OddsLine, ScanStatusPayload } from '../types';
@@ -58,6 +59,7 @@ const bepaalParserNaamVanUrl = (): string => {
   if (url.includes('toto.nl')) return 'Toto';
   if (url.includes('circus.nl')) return 'Circus';
   if (url.includes('tonybet')) return 'TonyBet';
+  if (url.includes('betcity.nl')) return 'Betcity';
   return 'Unibet';
 };
 
@@ -75,6 +77,10 @@ const voerParserUit = () => {
   if (url.includes('tonybet')) {
     stuurLog('TRACE', 'Parser gekozen', 'TonyBet parser actief.', { url });
     return { parser: 'TonyBet', ...parseTonyBetPage() };
+  }
+  if (url.includes('betcity.nl')) {
+    stuurLog('TRACE', 'Parser gekozen', 'Betcity parser actief.', { url });
+    return { parser: 'Betcity', ...parseBetcityPage() };
   }
   stuurLog('TRACE', 'Parser gekozen', 'Unibet parser actief.', { url });
   return { parser: 'Unibet', ...parseUnibetPage() };

@@ -1,4 +1,4 @@
-﻿/// <reference types="chrome" />
+/// <reference types="chrome" />
 
 import { verwerkInkomendeScan, verwerkHartslag } from './scanVerwerker';
 import { setupLogCentrum, verwerkLogBericht } from './logCentrum';
@@ -11,7 +11,7 @@ type RuntimeRequest =
   | { type: 'SCAN_STATUS'; payload: ScanStatusPayload }
   | { type?: string; payload?: unknown };
 
-const BROKER_HOST_SNIPPETS = ['unibet.nl', 'toto.nl', 'circus.nl', 'tonybet.nl'];
+const BROKER_HOST_SNIPPETS = ['unibet.nl', 'toto.nl', 'circus.nl', 'tonybet.nl', 'betcity.nl'];
 const SIDE_PANEL_PATH = 'src/sidepanel/sidepanel.html';
 const laatstBekendeUrlPerTab = new Map<number, string>();
 
