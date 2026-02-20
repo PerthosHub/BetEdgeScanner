@@ -7,11 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.8.0',
+  version: '2.8.1',
   date: '2026-02-20',
-  label: 'Sprint E3: Betcity & Mirror Cleanup',
+  label: 'Sprint E3: Betcity Optimization',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'FIX' as ChangeType,
+      text: 'Betcity 2-way support',
+      technicalDetails: 'Betcity parser ondersteunt nu ook 2-way markten (Tennis/Basketball) naast de standaard 3-way (Voetbal).'
+    },
     {
       type: 'FEATURE' as ChangeType,
       text: 'Betcity Support',

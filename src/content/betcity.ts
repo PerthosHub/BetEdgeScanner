@@ -24,19 +24,24 @@ export const parseBetcityPage = (): { matches: Partial<OddsLine>[]; sport?: stri
       if (!hoofdMarkt) return;
 
       const buttons = Array.from(hoofdMarkt.querySelectorAll('button.KambiBC-betty-outcome')).slice(0, 3);
-      if (buttons.length < 3) return;
+      if (buttons.length < 2) return;
+      const isThreeWay = buttons.length >= 3;
 
       const odd1 = parseOddWaarde(
         buttons[0]?.querySelector('.sc-kAyceB')?.textContent || buttons[0]?.textContent
       );
-      const oddX = parseOddWaarde(
-        buttons[1]?.querySelector('.sc-kAyceB')?.textContent || buttons[1]?.textContent
-      );
+      const oddX = isThreeWay
+        ? parseOddWaarde(
+            buttons[1]?.querySelector('.sc-kAyceB')?.textContent || buttons[1]?.textContent
+          )
+        : undefined;
       const odd2 = parseOddWaarde(
-        buttons[2]?.querySelector('.sc-kAyceB')?.textContent || buttons[2]?.textContent
+        (isThreeWay ? buttons[2] : buttons[1])?.querySelector('.sc-kAyceB')?.textContent ||
+          (isThreeWay ? buttons[2] : buttons[1])?.textContent
       );
 
-      if (odd1 <= 1 || oddX <= 1 || odd2 <= 1) return;
+      if (odd1 <= 1 || odd2 <= 1) return;
+      if (isThreeWay && (!oddX || oddX <= 1)) return;
 
       const eventLink = rij.querySelector('a[href*="#event/"]') as HTMLAnchorElement | null;
       const href = eventLink?.getAttribute('href') || '';
@@ -55,7 +60,7 @@ export const parseBetcityPage = (): { matches: Partial<OddsLine>[]; sport?: stri
 
       resultaten.push({
         externalEventId,
-        marketType: bepaalMarktType(3, gedetecteerdeSport),
+        marketType: bepaalMarktType(isThreeWay ? 3 : 2, gedetecteerdeSport),
         homeNameRaw: thuisPloeg,
         awayNameRaw: uitPloeg,
         odds1: odd1,
