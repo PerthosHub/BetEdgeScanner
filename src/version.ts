@@ -7,11 +7,16 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.8.1',
+  version: '2.8.2',
   date: '2026-02-20',
-  label: 'Sprint E3: Betcity Optimization',
+  label: 'Sprint E3: Ecosystem Sync',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'Ecosystem Alignment',
+      technicalDetails: 'Versie-sync met BEP v3.29.0 voor PC-wissel sync.'
+    },
     {
       type: 'FIX' as ChangeType,
       text: 'Betcity 2-way support',
@@ -26,11 +31,6 @@ export const VERSION_INFO = {
       type: 'REFACTOR' as ChangeType,
       text: 'Mirror Logic Cleanup',
       technicalDetails: 'bepaalMirrorDoelwitten verwijderd; scanner focust nu op directe data-injectie conform Cross-User Freshness principe.'
-    },
-    {
-      type: 'REFACTOR' as ChangeType,
-      text: 'Ecosystem Alignment',
-      technicalDetails: 'Versie-sync met BEP v3.28.0 en submodule onderhoud.'
     },
     {
       type: 'FEATURE' as ChangeType,
