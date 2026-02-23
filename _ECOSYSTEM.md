@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.8 (Dataflow Resilience)
-Laatste Update: 12 Feb 2026
+Versie: 3.10 (Flow Stability & UX Consistency)
+Laatste Update: 23 Feb 2026
 ## 🔄 CROSS-USER FRESHNESS (Architectuur-wet)
 - **Gedeelde Waarheid:** Odds-versheid (`last_seen_at`) is een systeembrede status op `broker_id + external_event_id`.
 - **User-Agnostisch:** Het maakt niet uit WELKE gebruiker de scan doet; BEP toont de meest recente tijd voor iedereen.
@@ -15,8 +15,8 @@ Laatste Update: 12 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.26.0
-    - STATUS: ✅ Actief & In Sync (Freshness: Cross-User)
+    - VERSIE: v3.33.0
+    - STATUS: ✅ Actief & In Sync (Flow: Stability & UX)
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)

@@ -263,6 +263,7 @@ export interface ScannedMatch {
     lastCheckedAt: string;
   }>;
   best: CalculationResult | null;
+  bestReason?: string | null;
 }
 
 export type ChangeType = 
