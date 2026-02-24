@@ -21,17 +21,62 @@ const verwerkTotoTijdstip = (tekst: string): { datum?: string, tijd?: string } =
     return {};
 };
 
+const normaliseerTekst = (tekst: string): string => {
+  return tekst
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+};
+
+const bevatTweeWegLabels = (markt: Element): boolean => {
+  const buttons = Array.from(markt.querySelectorAll('button[index]'));
+  if (buttons.length < 2) return false;
+
+  const labels = buttons
+    .map((btn) => {
+      const labelElement = btn.querySelector('[class*="_labelWrapper_"] [class*="_label_"]');
+      return normaliseerTekst(labelElement?.textContent || '');
+    })
+    .filter(Boolean);
+
+  return labels.includes('1') && labels.includes('2');
+};
+
 const vindPrimaireMarkt = (rij: Element): Element | null => {
   const markten = Array.from(rij.querySelectorAll('div[class*="_market_"]'));
   if (markten.length === 0) return null;
 
-  // Voorkeur: Winner/Resultaat markt, omdat die stabiel is voor 2-way/3-way.
-  const voorkeursMarkt = markten.find((markt) => {
-    const headerTekst = (markt.querySelector('div[class*="_header_"]')?.textContent || '').toLowerCase();
-    return headerTekst.includes('winnaar') || headerTekst.includes('resultaat');
+  // 1) Hard voorkeur op Fulltime/Moneyline: dit zijn de gewenste 1/2 odds.
+  const fulltimeMarkt = markten.find((markt) => {
+    const headerTekst = normaliseerTekst(markt.querySelector('div[class*="_header_"]')?.textContent || '');
+    return (
+      headerTekst.includes('fulltime') ||
+      headerTekst.includes('moneyline') ||
+      headerTekst.includes('money line')
+    );
+  });
+  if (fulltimeMarkt) return fulltimeMarkt;
+
+  // 2) Fallback: markt met expliciete 1/2 labels.
+  const tweeWegMarkt = markten.find(bevatTweeWegLabels);
+  if (tweeWegMarkt) return tweeWegMarkt;
+
+  // 3) Laatste fallback: resultaat/winnaar, maar nooit handicap/totaal.
+  const uitslagMarkt = markten.find((markt) => {
+    const headerTekst = normaliseerTekst(markt.querySelector('div[class*="_header_"]')?.textContent || '');
+    const isHandicapOfTotaal =
+      headerTekst.includes('handicap') ||
+      headerTekst.includes('totaal') ||
+      headerTekst.includes('total');
+    const isResultaat =
+      headerTekst.includes('resultaat') ||
+      headerTekst.includes('winner') ||
+      headerTekst.includes('winnaar');
+    return isResultaat && !isHandicapOfTotaal;
   });
 
-  return voorkeursMarkt || markten[0];
+  return uitslagMarkt || markten[0];
 };
 
 const leesOddsUitMarkt = (markt: Element): { odd1?: number; oddX?: number; odd2?: number } => {
@@ -41,7 +86,7 @@ const leesOddsUitMarkt = (markt: Element): { odd1?: number; oddX?: number; odd2?
   const oddsOpLabel: Record<string, number | undefined> = {};
 
   buttonLijst.forEach((btn) => {
-    const labelElement = btn.querySelector('[class*="_label_"]');
+    const labelElement = btn.querySelector('[class*="_labelWrapper_"] [class*="_label_"]');
     const valueElement = btn.querySelector('[class*="_value_"]');
 
     const ruweLabel = (labelElement?.textContent || '').trim().toUpperCase();

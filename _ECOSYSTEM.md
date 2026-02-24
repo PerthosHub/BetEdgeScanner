@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.10 (Flow Stability & UX Consistency)
-Laatste Update: 23 Feb 2026
+Versie: 3.11 (TOTO NBA Fulltime Sync)
+Laatste Update: 24 Feb 2026
 ## 🔄 CROSS-USER FRESHNESS (Architectuur-wet)
 - **Gedeelde Waarheid:** Odds-versheid (`last_seen_at`) is een systeembrede status op `broker_id + external_event_id`.
 - **User-Agnostisch:** Het maakt niet uit WELKE gebruiker de scan doet; BEP toont de meest recente tijd voor iedereen.
@@ -15,13 +15,13 @@ Laatste Update: 23 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.33.0
-    - STATUS: ✅ Actief & In Sync (Flow: Stability & UX)
+    - VERSIE: v3.33.1
+    - STATUS: Actief & In Sync (Release: Ecosystem Sync)
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.6.5
-    - STATUS: ✅ Actief & In Sync (Dataflow: Event-Level)
+    - VERSIE: v2.8.3
+    - STATUS: Actief & In Sync (TOTO NBA: Fulltime 1/2)
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -408,3 +408,4 @@ dezelfde `capture_id` van hierboven.
 3. **De Matcher:** BEP ziet bij Wedstrijd 1: `home_name_raw: "AZ"`. 
 4. **De Koppeling:** BEP kijkt in de tabel `team_aliassen` en vindt: `"AZ" = "AZ Alkmaar"`.
 5. **Het Resultaat:** Op jouw dashboard verschijnt nu netjes: **AZ Alkmaar vs N.E.C.** met de odds van Unibet.
+

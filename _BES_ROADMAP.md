@@ -1,13 +1,14 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.7.0
-Datum: 18 Feb 2026
+Huidige Versie: 2.8.3
+Datum: 24 Feb 2026
 
 
 ---
 
 ## ✅ LAATST AFGEROND
+- [x] **v2.8.3: TOTO NBA Fulltime Fix:** Scanner selecteert nu expliciet de `Fulltime` 1/2 odds en sluit `Totaal punten` en `Handicap Winnaar` uit.
 - [x] **v2.7.0: Ecosystem Polish:** Versie-sync met BEP v3.27.0 en submodule onderhoud.
 - [x] **v2.6.0: Dataflow Resilience:** Retry-logica, fingerprinting en deduplicatie geïmplementeerd. Auth-loop protectie en throttled logging toegevoegd.
 - [x] **v2.5.0: Build-Health Groen:** Volledige refactor naar strikte TypeScript interfaces.
@@ -41,6 +42,8 @@ Datum: 18 Feb 2026
 ---
 
 ## 🔮 BACKLOG (TOEKOMST)
+
+
 - [ ] **Live Detectie:** Herkennen van 'LIVE' badges voor aparte filtering (nu filteren we ze hard weg).
 - [ ] **Error Recovery:** Automatisch herladen van gecrashte of bevroren tabbladen.
 - [ ] **Multi-Tab Orchestration:** Voorkomen dat meerdere open tabs van dezelfde broker tegelijk schrijven.
@@ -53,6 +56,13 @@ Datum: 18 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.8.3] - 2026-02-24
+**"TOTO NBA Fulltime Fix"**
+- **FIX:** Marktselectie kiest nu eerst `Fulltime`/`Moneyline` voor 2-weg odds.
+- **FIX:** Fallback selecteert alleen markten met labels `1` en `2`.
+- **FIX:** `Handicap` en `Totaal punten` markten worden uitgesloten voor primaire winnaar-odds.
+- **TECH:** Labeluitlezing aangescherpt via `labelWrapper` om verkeerde oddskoppeling te voorkomen.
 
 ### [2.7.0] - 2026-02-18
 **"Ecosystem Sync Update"**
@@ -144,3 +154,4 @@ Datum: 18 Feb 2026
 
 ---
 *Roadmap bijgewerkt door AI Architect op 31 Jan 2026.*
+

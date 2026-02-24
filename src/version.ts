@@ -7,11 +7,21 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.8.2',
-  date: '2026-02-20',
-  label: 'Sprint E3: Ecosystem Sync',
+  version: '2.8.3',
+  date: '2026-02-24',
+  label: 'Sprint E4: TOTO NBA Fulltime Fix',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'FIX' as ChangeType,
+      text: 'TOTO NBA Fulltime market selectie',
+      technicalDetails: 'Parser selecteert nu expliciet de Fulltime/Moneyline markt en sluit Totaal punten en Handicap Winnaar uit bij 2-weg odds.'
+    },
+    {
+      type: 'FIX' as ChangeType,
+      text: 'Correcte 1/2 odds extractie',
+      technicalDetails: 'Label parsing leest nu uitsluitend outcome-labels binnen labelWrapper, zodat NBA odds zoals 4,30 en 1,23 correct worden opgehaald.'
+    },
     {
       type: 'REFACTOR' as ChangeType,
       text: 'Ecosystem Alignment',
