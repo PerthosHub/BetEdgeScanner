@@ -1,0 +1,54 @@
+name: Release Scanner
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Package dist as zip
+        run: |
+          cd dist
+          zip -r ../BetEdgeScanner-${{ github.ref_name }}.zip .
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: BetEdge Scanner ${{ github.ref_name }}
+          body: |
+            Nieuwe BetEdge Scanner release: `${{ github.ref_name }}`.
+
+            Download en installatie:
+            1. Download het ZIP-bestand uit deze release.
+            2. Pak het ZIP-bestand volledig uit op je computer.
+            3. Open `chrome://extensions` in Chrome.
+            4. Zet `Ontwikkelaarsmodus` aan (rechtsboven).
+            5. Klik op `Load unpacked` en kies de uitgepakte map.
+            6. Ververs BetEdge Pro en controleer in de tab `Scanner Extensie`.
+
+            Opmerking:
+            - Bij een update moet je in ontwikkelaarsmodus meestal opnieuw `Load unpacked` doen of de extensie herladen.
+            - Gebruik altijd de nieuwste release om versieverschillen te voorkomen.
+          files: BetEdgeScanner-${{ github.ref_name }}.zip

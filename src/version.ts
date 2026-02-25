@@ -7,11 +7,26 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.8.3',
-  date: '2026-02-24',
-  label: 'Sprint E4: TOTO NBA Fulltime Fix',
+  version: '2.8.4',
+  date: '2026-02-25',
+  label: 'Publieke release distributie en versie-bridge',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'FEATURE' as ChangeType,
+      text: 'BetEdge Pro versie-bridge',
+      technicalDetails: 'Nieuwe content-script bridge deelt de actieve scanner-versie met BetEdge Pro, zodat gebruikers direct zien of update nodig is.'
+    },
+    {
+      type: 'FEATURE' as ChangeType,
+      text: 'Automatische GitHub Releases',
+      technicalDetails: 'Workflow .github/workflows/release.yml bouwt en publiceert automatisch een ZIP asset bij elke vX.Y.Z tag.'
+    },
+    {
+      type: 'FIX' as ChangeType,
+      text: 'Lokale dev-domeinen voor bridge',
+      technicalDetails: 'Version bridge is beschikbaar op localhost en 127.0.0.1, zodat versie-detectie ook op afwijkende lokale poorten werkt.'
+    },
     {
       type: 'FIX' as ChangeType,
       text: 'TOTO NBA Fulltime market selectie',

@@ -65,3 +65,28 @@ Vermeld voor ELK blok het pad: `// FILE: src/pad/naar/bestand.tsx`
 - 🔹 **Situatie 2 (Bestand < 80 regels):** Geef het VOLLEDIGE bestand.
 - 🔹 **Situatie 3 (Groot bestand deel-update):** Geef de nieuwe code in één blok inclusief exact 3 regels huidige (onveranderde) code DIRECT VOOR en DIRECT NA de wijziging. Johan selecteert deze 3+3 context-regels in zijn editor en plakt het nieuwe blok eroverheen voor 100% precisie.
 - 🔹 **Situatie 4 (> 3 plekken aanpassing):** Geef het VOLLEDIGE bestand.
+---
+
+## RELEASE PROTOCOL (PUBLIEKE EXTENSIE DISTRIBUTIE - VERPLICHT)
+
+- Doel: gebruikers kunnen de scanner downloaden zonder GitHub-login.
+- BetEdgeScanner repository moet hiervoor `Public` staan.
+- Gebruik altijd GitHub Releases als distributiekanaal.
+
+### Verplichte release-flow bij een nieuwe scanner versie
+1. Werk versie bij in:
+   - `package.json` (`version`)
+   - `src/version.ts` (`VERSION_INFO.version`, `date`, `label`, changelog)
+   - `_BES_ROADMAP.md` (Huidige Versie + changelogblok)
+2. Commit wijzigingen op `main`.
+3. Maak en push een tag in formaat `vX.Y.Z` (bijv. `v2.8.4`):
+   - `git tag vX.Y.Z`
+   - `git push origin vX.Y.Z`
+4. GitHub Actions workflow `.github/workflows/release.yml` bouwt automatisch de extensie en publiceert een release met ZIP-asset.
+5. Verifieer na release:
+   - Release bestaat op `https://github.com/PerthosHub/BetEdgeScanner/releases`
+   - ZIP-asset is downloadbaar zonder inloggen.
+
+### AI Gedragsregel voor release-vragen
+- Als Johan vraagt om "nieuwe versie committen/pushen/releasen", volg ALTIJD bovenstaande flow inclusief tag push.
+- Stop niet na alleen commit; release is pas klaar als tag is gepusht en de GitHub Release zichtbaar is.

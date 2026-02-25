@@ -32,6 +32,15 @@ const manifest = defineManifest({
       js: ['src/content/index.ts'],
       run_at: 'document_idle' 
     },
+    {
+      matches: [
+        'https://bet-edge-pro.vercel.app/*',
+        'http://localhost/*',
+        'http://127.0.0.1/*',
+      ],
+      js: ['src/content/versionBridge.ts'],
+      run_at: 'document_idle',
+    },
   ],
 })
 

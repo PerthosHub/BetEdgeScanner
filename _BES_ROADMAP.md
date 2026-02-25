@@ -1,13 +1,14 @@
 // FILE: _BES_ROADMAP.md
 # 🗺️ ROADMAP: BetEdge Scanner (Extensie)
 Status: Fase 4 - Multi-Broker & Monitoring 🚀
-Huidige Versie: 2.8.3
-Datum: 24 Feb 2026
+Huidige Versie: 2.8.4
+Datum: 25 Feb 2026
 
 
 ---
 
 ## ✅ LAATST AFGEROND
+- [x] **v2.8.4: Publieke release distributie:** Automatische GitHub Release-flow toegevoegd (tag -> build -> ZIP), plus versie-bridge naar BetEdge Pro en localhost-poortonafhankelijke detectie.
 - [x] **v2.8.3: TOTO NBA Fulltime Fix:** Scanner selecteert nu expliciet de `Fulltime` 1/2 odds en sluit `Totaal punten` en `Handicap Winnaar` uit.
 - [x] **v2.7.0: Ecosystem Polish:** Versie-sync met BEP v3.27.0 en submodule onderhoud.
 - [x] **v2.6.0: Dataflow Resilience:** Retry-logica, fingerprinting en deduplicatie geïmplementeerd. Auth-loop protectie en throttled logging toegevoegd.
@@ -56,6 +57,12 @@ Datum: 24 Feb 2026
 ---
 
 ## 📜 CHANGELOG (Laatste wijzigingen eerst)
+
+### [2.8.4] - 2026-02-25
+**"Publieke distributie en update-detectie"**
+- **FEAT:** Automatische GitHub Release workflow toegevoegd voor publieke ZIP-distributie bij elke `vX.Y.Z` tag.
+- **FEAT:** Nieuwe versie-bridge tussen scanner en BetEdge Pro, zodat de app direct de actieve scanner-versie kan tonen.
+- **FIX:** Bridge-matches uitgebreid met `localhost` en `127.0.0.1`, zodat detectie werkt op verschillende lokale poorten.
 
 ### [2.8.3] - 2026-02-24
 **"TOTO NBA Fulltime Fix"**
@@ -154,4 +161,6 @@ Datum: 24 Feb 2026
 
 ---
 *Roadmap bijgewerkt door AI Architect op 31 Jan 2026.*
+
+
 
