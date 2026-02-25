@@ -39,7 +39,10 @@ const IGNORE_PATTERNS = [
  */
 const ROOT_FILES_TO_INCLUDE = [
   '_ECOSYSTEM.md',     // De "Grondwet": Bevat de database velden en business rules.
-  '_BES_ROADMAP.md',   // De "Routekaart": Vertelt de AI wat we al gedaan hebben en wat nog moet.
+  'BES_STATUS.md',     // Actuele status en focus van BES.
+  'BES_BACKLOG.md',    // Open werk met prioriteit.
+  'BES_DECISIONS.md',  // Waarom-keuzes en afwegingen.
+  'BES_RELEASE_NOTES.md', // Korte releasegeschiedenis.
   'package.json',      // De "Gereedschapskist": Laat zien welke bibliotheken (libraries) we gebruiken.
   'tsconfig.json',     // De "Taalregels": Vertelt de computer hoe hij TypeScript moet begrijpen.
   'vite.config.ts'     // De "Blauwdruk": Bevat de permissies en instellingen van de extensie.

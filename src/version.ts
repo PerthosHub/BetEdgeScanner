@@ -7,11 +7,26 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.8.4',
+  version: '2.8.5',
   date: '2026-02-25',
-  label: 'Publieke release distributie en versie-bridge',
+  label: 'Document governance en roadmap uitfasering',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'Roadmap uitfasering',
+      technicalDetails: 'Niet-actieve roadmap-bestanden verwijderd na borging van kerninformatie in STATUS/BACKLOG/DECISIONS/RELEASE_NOTES.'
+    },
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'DOC-CHECK borging in systeminstructions',
+      technicalDetails: 'Nieuwe vaste update-afspraken en herinnerzin toegevoegd om documentflow consequent uit te voeren na featurewerk.'
+    },
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'Context generator geüpdatet',
+      technicalDetails: 'scripts/generate_context.cjs leest nu BES status/backlog/decisions/release notes in plaats van legacy roadmap.'
+    },
     {
       type: 'FEATURE' as ChangeType,
       text: 'BetEdge Pro versie-bridge',

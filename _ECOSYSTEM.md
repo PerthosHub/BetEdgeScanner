@@ -1,7 +1,7 @@
 // FILE: _ECOSYSTEM.md
 # 🌍 BETEDGE ECOSYSTEM (SHARED KERNEL)
-Versie: 3.11 (TOTO NBA Fulltime Sync)
-Laatste Update: 24 Feb 2026
+Versie: 3.12 (Docs & governance sync)
+Laatste Update: 25 Feb 2026
 ## 🔄 CROSS-USER FRESHNESS (Architectuur-wet)
 - **Gedeelde Waarheid:** Odds-versheid (`last_seen_at`) is een systeembrede status op `broker_id + external_event_id`.
 - **User-Agnostisch:** Het maakt niet uit WELKE gebruiker de scan doet; BEP toont de meest recente tijd voor iedereen.
@@ -15,13 +15,13 @@ Laatste Update: 24 Feb 2026
 
 🅰️  **APP: BetEdge Pro (BEP)**
     - TYPE:   Web Applicatie (De Consument)
-    - VERSIE: v3.33.1
-    - STATUS: Actief & In Sync (Release: Ecosystem Sync)
+    - VERSIE: v3.34.0
+    - STATUS: Actief & In Sync (Support Matrix + Bet Studio cleanup)
 
 🅱️  **APP: BetEdge Scanner (BES)**
     - TYPE:   Browser Extensie (De Leverancier)
-    - VERSIE: v2.8.3
-    - STATUS: Actief & In Sync (TOTO NBA: Fulltime 1/2)
+    - VERSIE: v2.8.4
+    - STATUS: Actief & In Sync (Publieke release + versie-bridge)
 
 ⚠️  SYSTEEM SETUP (CRUCIAAL):
     De volgende bestanden zijn via een **Hard Link** fysiek gekoppeld tussen beide projecten. 
@@ -285,7 +285,8 @@ De Bet Studio is de centrale hub voor al je scans en berekeningen.
    - Gebruik uitsluitend de types uit `src/types.ts`. Het gebruik van `any` is verboden.
 4. **Performance:** Voorkom "Select All" queries op grote tabellen. Gebruik altijd tijdfilters (`.gt`) of specifieke ID-filters.
 5. **Versiebeheer:** 
-   - Bij nieuwe features: Update `_BEP_ROADMAP.md` (intern) en `src/constants/versions.ts` (zichtbaar voor gebruiker).
+   - Bij nieuwe features: update `BEP_RELEASE_NOTES.md` (samenvatting), `BEP_STATUS.md` (indien status wijzigt) en `src/constants/versions.ts` (in-app changelog).
+   - Bij scannerfeatures: update `BES_RELEASE_NOTES.md`, `BES_STATUS.md` en `src/version.ts`.
 
 
 
@@ -304,7 +305,7 @@ extra controle voor de AI: komt de code overeen met het verhaal van Johan?
 1. **Herkenning:** Bij het bezoeken van een URL (bijv. Unibet.nl) checkt BES in 
    de lokale configuratie of deze site ondersteund wordt.
 2. **Scanning:** De 'Ogen' lezen de pagina. Momenteel werkt dit volledig voor 
-   Unibet (Kambi-structuur) en experimenteel voor TOTO.
+   Unibet (Kambi-structuur), TOTO, Circus en TonyBet (site- en markt-afhankelijk).
 3. **Data Opslag:** Gevonden wedstrijden en odds worden direct als 'Rauwe Data' 
    in Supabase opgeslagen (`odds_captures` & `odds_lines`).
 4. **Mirroring:** Data van Unibet wordt automatisch gekopieerd naar BetCity 
