@@ -23,8 +23,53 @@ const SCAN_DEBOUNCE_MS = 2000;
 const INIT_SCAN_DELAY_MS = 3000;
 const HEALTH_SCAN_INTERVAL_MS = 15000;
 const HEARTBEAT_INTERVAL_MS = 30000;
+const EMPTY_SCAN_GRACE_MS = 5000;
+const CONTEXT_INVALIDATED_FRAGMENT = 'Extension context invalidated';
+let extensionContextActief = true;
+let idleStatusActiefTot = 0;
+let laatsteNietLegeScanTijd = 0;
+let healthScanInterval: number | undefined;
 
 const formatOdd = (odd?: number): string => (typeof odd === 'number' && Number.isFinite(odd) ? odd.toFixed(4) : 'na');
+
+const isContextInvalidatedError = (error: unknown): boolean => {
+  if (!error) return false;
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes(CONTEXT_INVALIDATED_FRAGMENT);
+};
+
+const stopScannerDoorInvalidatie = () => {
+  if (!extensionContextActief) return;
+  extensionContextActief = false;
+  clearTimeout(scanTimeout);
+  if (healthScanInterval) clearInterval(healthScanInterval);
+  observer.disconnect();
+};
+
+const stuurRuntimeBericht = (type: string, payload: unknown): boolean => {
+  if (!extensionContextActief) return false;
+
+  if (typeof chrome === 'undefined' || !chrome.runtime?.id) {
+    stopScannerDoorInvalidatie();
+    return false;
+  }
+
+  try {
+    chrome.runtime.sendMessage({ type, payload }, () => {
+      const runtimeError = chrome.runtime.lastError;
+      if (!runtimeError) return;
+      if (runtimeError.message?.includes(CONTEXT_INVALIDATED_FRAGMENT)) {
+        stopScannerDoorInvalidatie();
+      }
+    });
+    return true;
+  } catch (error) {
+    if (isContextInvalidatedError(error)) {
+      stopScannerDoorInvalidatie();
+    }
+    return false;
+  }
+};
 
 const maakWedstrijdSleutel = (wedstrijd: Partial<OddsLine>): string => {
   const eventId = (wedstrijd.externalEventId || '').trim();
@@ -87,6 +132,8 @@ const voerParserUit = () => {
 };
 
 const startScanRonde = () => {
+  if (!extensionContextActief) return;
+
   const scanRunId = crypto.randomUUID();
   const parserHint = bepaalParserNaamVanUrl();
   const sportHint = bepaalSportUitUrl();
@@ -110,6 +157,15 @@ const startScanRonde = () => {
   
   // TRACE LOGGING: Zie waarom er niets gebeurt
   if (alleWedstrijden.length === 0) {
+      if ((nu - laatsteNietLegeScanTijd) < EMPTY_SCAN_GRACE_MS) {
+        stuurLog('TRACE', 'Lege scan genegeerd', 'Tijdelijke lege parser-uitkomst binnen grace window.', {
+          scanRunId,
+          graceMs: EMPTY_SCAN_GRACE_MS,
+          vorigeNietLegeScanMsGeleden: nu - laatsteNietLegeScanTijd,
+          url: window.location.href,
+        });
+        return;
+      }
       stuurLog('WARNING', 'Geen Matches', 'Parser uitgevoerd, maar 0 resultaten.', { sport, league, url: window.location.href });
       stuurScanStatus({
         url: window.location.href,
@@ -124,6 +180,7 @@ const startScanRonde = () => {
       });
       return; 
   }
+  laatsteNietLegeScanTijd = nu;
 
   const gewijzigdeWedstrijden: Partial<OddsLine>[] = [];
   const liveMatches: LiveScanMatch[] = [];
@@ -181,19 +238,16 @@ const startScanRonde = () => {
       `${alleWedstrijden.length} wedstrijden gestuurd (${gewijzigdeWedstrijden.length} gewijzigd).`,
       { url: window.location.href, scanRunId, payloadFingerprint }
     );
-    chrome.runtime.sendMessage({
-      type: 'ODDS_DATA', 
-      payload: {
-          url: window.location.href,
-          scanRunId,
-          payloadFingerprint,
-          sport: sport, 
-          league,
-          parser,
-          matches: alleWedstrijden,
-          totaalGevonden: alleWedstrijden.length,
-          seenEventIds,
-      }
+    stuurRuntimeBericht('ODDS_DATA', {
+      url: window.location.href,
+      scanRunId,
+      payloadFingerprint,
+      sport: sport,
+      league,
+      parser,
+      matches: alleWedstrijden,
+      totaalGevonden: alleWedstrijden.length,
+      seenEventIds,
     });
 
     laatsteBerichtTijd = nu; 
@@ -204,16 +258,13 @@ const startScanRonde = () => {
       stuurLog('INFO', 'Hartslag', 'Geen wijzigingen, stuur keep-alive.', { matchesInMem: alleWedstrijden.length, scanRunId });
       
       stuurLog('INFO', 'HEARTBEAT verstuurd', 'Keep-alive verstuurd.', { url: window.location.href, scanRunId });
-      chrome.runtime.sendMessage({
-          type: 'HEARTBEAT',
-          payload: {
-              url: window.location.href,
-              scanRunId,
-              league,
-              parser,
-              timestamp: nu,
-              seenEventIds,
-          }
+      stuurRuntimeBericht('HEARTBEAT', {
+        url: window.location.href,
+        scanRunId,
+        league,
+        parser,
+        timestamp: nu,
+        seenEventIds,
       });
 
       laatsteBerichtTijd = nu; 
@@ -241,12 +292,11 @@ const stuurScanStatus = (payload: Omit<ScanStatusPayload, 'timestamp' | 'context
     sport: payload.sport || '',
     league: payload.league || '',
     parser: payload.parser || '',
-    scanRunId: payload.scanRunId || '',
     matchesTotal: payload.matchesTotal,
     matchesChanged: payload.matchesChanged,
     scanPhase: payload.scanPhase || '',
     idleWaitMs: payload.idleWaitMs || 0,
-    liveMatches: payload.liveMatches || [],
+    liveCount: payload.liveMatches?.length || 0,
   });
 
   const nu = Date.now();
@@ -257,16 +307,14 @@ const stuurScanStatus = (payload: Omit<ScanStatusPayload, 'timestamp' | 'context
   laatsteStatusKey = sleutel;
   laatsteStatusTijd = nu;
 
-  chrome.runtime.sendMessage({
-    type: 'SCAN_STATUS',
-    payload: {
-      ...payload,
-      timestamp: nu,
-    }
+  stuurRuntimeBericht('SCAN_STATUS', {
+    ...payload,
+    timestamp: nu,
   });
 };
 
 const startScanRondeVeilig = () => {
+  if (!extensionContextActief) return;
   if (isScanBezig) {
     wachtendeScan = true;
     return;
@@ -285,18 +333,26 @@ const startScanRondeVeilig = () => {
 };
 
 const observer = new MutationObserver(() => {
+  if (!extensionContextActief) return;
   clearTimeout(scanTimeout);
-  stuurScanStatus({
-    url: window.location.href,
-    sport: bepaalSportUitUrl(),
-    league: bepaalLeagueUitUrl(),
-    parser: bepaalParserNaamVanUrl(),
-    matchesTotal: 0,
-    matchesChanged: 0,
-    scanPhase: 'IDLE_WAIT',
-    idleWaitMs: SCAN_DEBOUNCE_MS,
-  });
-  scanTimeout = setTimeout(startScanRondeVeilig, SCAN_DEBOUNCE_MS); 
+  const nu = Date.now();
+  if (nu >= idleStatusActiefTot) {
+    idleStatusActiefTot = nu + SCAN_DEBOUNCE_MS;
+    stuurScanStatus({
+      url: window.location.href,
+      sport: bepaalSportUitUrl(),
+      league: bepaalLeagueUitUrl(),
+      parser: bepaalParserNaamVanUrl(),
+      matchesTotal: 0,
+      matchesChanged: 0,
+      scanPhase: 'IDLE_WAIT',
+      idleWaitMs: SCAN_DEBOUNCE_MS,
+    });
+  }
+  scanTimeout = setTimeout(() => {
+    idleStatusActiefTot = 0;
+    startScanRondeVeilig();
+  }, SCAN_DEBOUNCE_MS);
 });
 
 observer.observe(document.body, { childList: true, subtree: true });
@@ -313,10 +369,10 @@ stuurScanStatus({
 
 setTimeout(startScanRondeVeilig, INIT_SCAN_DELAY_MS);
 
-const healthScanInterval = window.setInterval(() => {
+healthScanInterval = window.setInterval(() => {
   startScanRondeVeilig();
 }, HEALTH_SCAN_INTERVAL_MS);
 
 window.addEventListener('beforeunload', () => {
-  clearInterval(healthScanInterval);
+  if (healthScanInterval) clearInterval(healthScanInterval);
 });
