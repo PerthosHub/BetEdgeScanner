@@ -121,6 +121,7 @@ export const verwerkInkomendeScan = async (payload: ScanPayload) => {
       matches: payload.matches,
       seenEventIds: payload.seenEventIds || [],
       sport: payload.sport || 'Onbekend',
+      league: payload.league || 'Onbekend',
       sourceUrl: payload.url,
       userId,
       scanRunId: payload.scanRunId,

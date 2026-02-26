@@ -9,6 +9,7 @@ interface OpslagVerzoek {
   matches: Partial<OddsLine>[];
   seenEventIds?: string[];
   sport: string;
+  league?: string;
   sourceUrl: string;
   userId: string;
   scanRunId: string;
@@ -60,7 +61,7 @@ const withRetry = async <T>(
 
 export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
   try {
-    const { brokerId, brokerName, matches, seenEventIds, userId, sport, scanRunId, sourceUrl, payloadFingerprint } = verzoek;
+    const { brokerId, brokerName, matches, seenEventIds, userId, sport, league, scanRunId, sourceUrl, payloadFingerprint } = verzoek;
 
     if (matches.length === 0) return;
 
@@ -77,6 +78,7 @@ export const verwerkEnSlaOp = async (verzoek: OpslagVerzoek) => {
             user_id: userId,
             source: 'Extension',
             sport: sport || 'Onbekend',
+            league: league || 'Onbekend',
             captured_at: new Date().toISOString(),
             last_seen_at: new Date().toISOString(),
           })

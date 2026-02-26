@@ -27,11 +27,19 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
   // STAP 1: Sport via Utils
   const detectedSport = bepaalSportUitUrl();
 
-  // Zoek naar de standaard wedstrijd-blokken (lijstweergave)
-  const matchRows = document.querySelectorAll('div[data-testid="event-summary-prematch"]'); 
+  // Pak zowel prematch als live event-blokken
+  const matchRows = document.querySelectorAll('div[data-testid="event-summary-prematch"], div[data-testid="event-summary-live"]');
 
   matchRows.forEach((row) => {
       try {
+          const rowElement = row as HTMLElement;
+          const testId = rowElement.getAttribute('data-testid') || '';
+          const eventIdAttr = rowElement.getAttribute('data-eventid') || '';
+          const isLive =
+              testId === 'event-summary-live' ||
+              !!row.querySelector('[data-testid="score-live-icon"]') ||
+              (rowElement.innerText || '').toLowerCase().includes('live');
+
           const nameContainer = row.querySelector('[data-testid="event-summary-name"]');
           if (!nameContainer) return;
 
@@ -44,11 +52,13 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
           const awayTeam = lines[1];
 
           // Datum & Tijd ophalen uit de tekst van de rij
-          const rowText = (row as HTMLElement).innerText || "";
+          const rowText = rowElement.innerText || "";
           const dateMatch = rowText.match(/(\d{2}\/\d{2})/);
           const timeMatch = rowText.match(/(\d{2}:\d{2})/);
           const isoDate = dateMatch ? parseCircusDate(dateMatch[0]) : undefined;
           const eventTime = timeMatch ? timeMatch[0] : undefined;
+          const linkElement = row.querySelector('a[href*="/event/"]') as HTMLAnchorElement | null;
+          const eventUrl = linkElement?.href;
 
           const marketSummaries = Array.from(row.querySelectorAll('[data-testid="market-summary"]'));
           const homeLower = homeTeam.toLowerCase();
@@ -91,6 +101,7 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
 
           // STAP 3: ID & Markt via Utils
           const cleanID = genereerWedstrijdId(homeTeam, awayTeam);
+          const externalEventId = eventIdAttr ? `circus-${eventIdAttr}` : `circus-${cleanID}`;
           const marketType = bepaalMarktType(oddsValues.length, detectedSport);
 
           const o1 = oddsValues[0];
@@ -99,14 +110,15 @@ export const parseCircusPage = (): { matches: Partial<OddsLine>[], sport?: strin
           const o2 = oddsValues.length >= 3 ? oddsValues[2] : oddsValues[1];
 
           results.push({
-              externalEventId: `circus-${cleanID}`,
+              externalEventId,
               marketType: marketType,
               homeNameRaw: homeTeam,
               awayNameRaw: awayTeam,
               odds1: o1,
               oddsX: oX,
               odds2: o2,
-              isLive: false, 
+              isLive,
+              eventUrl,
               eventDate: isoDate,
               eventTime: eventTime
           });
