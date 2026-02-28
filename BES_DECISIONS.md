@@ -16,6 +16,12 @@ Gebruik per besluit altijd deze 4 regels:
 
 ## 🧠 Besluitenlog
 
+### 📅 28 Feb 2026 - Gedeelde AI-instructielaag en geen contextbundels meer
+- **Besluit:** Nieuwe Codex chats starten via `AGENTS.md` en `SHARED_SYSTEMINSTRUCTIONS.md`; handmatig gegenereerde contextbundels worden niet meer gebruikt.
+- **Waarom:** Open tabs en losse markdownbestanden gaven te weinig zekerheid, terwijl de context-generator niet meer in de workflow zat.
+- **Effect:** Instructiebron is explicieter en de repo bevat minder dode hulpmiddelen.
+- **Trade-off:** Een deel van de instructiecontext ligt nu in de root-workspace en niet alleen in de scannerrepo.
+
 ### 📅 25 Feb 2026 - Roadmaps uitgefaseerd, governance via 4 vaste documenten
 - **Besluit:** `_BEP_ROADMAP.md` en `_BES_ROADMAP.md` zijn verwijderd en vervangen door vaste documentflow.
 - **Waarom:** Minder dubbele bronnen en betere continuiteit over meerdere chats.

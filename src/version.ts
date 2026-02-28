@@ -7,11 +7,26 @@ export interface ChangelogEntry {
 }
 
 export const VERSION_INFO = {
-  version: '2.8.5',
-  date: '2026-02-25',
-  label: 'Document governance en roadmap uitfasering',
+  version: '2.8.6',
+  date: '2026-02-28',
+  label: 'Shared instructielaag en context cleanup',
   status: 'Stable',
   detailedChanges: [
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'Shared instruction layer',
+      technicalDetails: 'Nieuwe repo-ingang via AGENTS.md en SHARED_SYSTEMINSTRUCTIONS.md, met aparte BEP- en BES-systeminstructions.'
+    },
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'Context script removal',
+      technicalDetails: 'scripts/generate_context.cjs en de gegenereerde contextbundel zijn verwijderd; workflow leunt niet meer op handmatig context bundelen.'
+    },
+    {
+      type: 'REFACTOR' as ChangeType,
+      text: 'Systeminstructions hernoemd',
+      technicalDetails: 'BES gebruikt nu BES_SYSTEMINSTRUCTIONS.md in plaats van het generieke _SYSTEMINSTRUCTIONS.md.'
+    },
     {
       type: 'REFACTOR' as ChangeType,
       text: 'Roadmap uitfasering',
@@ -25,7 +40,7 @@ export const VERSION_INFO = {
     {
       type: 'REFACTOR' as ChangeType,
       text: 'Context generator geüpdatet',
-      technicalDetails: 'scripts/generate_context.cjs leest nu BES status/backlog/decisions/release notes in plaats van legacy roadmap.'
+      technicalDetails: 'Projectdocumentatie is verplaatst van legacy roadmap-denken naar vaste governance via status, backlog, decisions en release notes.'
     },
     {
       type: 'FEATURE' as ChangeType,

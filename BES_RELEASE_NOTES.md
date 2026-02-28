@@ -7,11 +7,25 @@
 
 ---
 
+## 🚀 v2.8.6 - 28 Feb 2026
+### Wat is opgeleverd
+- [x] Gedeelde instructielaag ingericht via `AGENTS.md`, `SHARED_SYSTEMINSTRUCTIONS.md` en projectspecifieke BEP/BES-systeminstructions.
+- [x] Bestandsnamen van de systeminstructions verduidelijkt naar `BEP_SYSTEMINSTRUCTIONS.md` en `BES_SYSTEMINSTRUCTIONS.md`.
+- [x] Oude context-generator scripts en gegenereerde contextbestanden verwijderd.
+
+### Waarom dit belangrijk was
+- Nieuwe Codex chats moesten voorspelbaar de juiste instructiebronnen gebruiken.
+- Oude context-bundelworkflow werd niet meer gebruikt en leverde alleen onderhoudsruis op.
+
+### Wat je als gebruiker merkt
+- Betere interne overdraagbaarheid van projectcontext.
+- Minder verouderde tooling in de repo.
+
 ## 🚀 v2.8.5 - 25 Feb 2026
 ### Wat is opgeleverd
 - [x] Roadmap-bestanden verwijderd na migratie van relevante projectkennis.
 - [x] `SYSTEMINSTRUCTIONS` opgeschoond en uitgebreid met vaste DOC-CHECK borging.
-- [x] Context script gebruikt nu `STATUS/BACKLOG/DECISIONS/RELEASE_NOTES` als primaire bron.
+- [x] Governanceflow via `STATUS/BACKLOG/DECISIONS/RELEASE_NOTES` vastgelegd.
 
 ### Waarom dit belangrijk was
 - Minder document-ruis en minder kans op vergeten afspraken.
