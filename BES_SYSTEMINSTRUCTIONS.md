@@ -38,6 +38,16 @@ Daarna:
 6. Maak en push tag `vX.Y.Z`
 7. Controleer GitHub Release en ZIP asset
 
+### Interpretatie van "versie update"
+- Als de gebruiker vraagt om een `versie update` voor BES, behandel dit standaard als een echte release-intentie.
+- Dat betekent dus niet alleen bestanden bijwerken, maar ook:
+  - commit en push
+  - tag `vX.Y.Z`
+  - tag push naar origin
+  - controle dat de GitHub Release zichtbaar is
+  - controle dat de ZIP downloadbaar is
+- Alleen als de gebruiker expliciet zegt dat het om een voorbereidende bump gaat, mag je deze releaseflow overslaan.
+
 ## BES Borging
 - Als de wijziging BEP raakt, beoordeel ook `BEP_*` en `BetEdgePro/src/constants/versions.ts`.
 - Een scannerrelease is pas klaar als tag en GitHub Release echt live staan.

@@ -9,8 +9,8 @@
 
 ## 🛰️ Live Status
 - [x] **Laatst bijgewerkt:** 28 Feb 2026
-- [x] **Live versie:** `2.8.4`
-- [x] **Volgende versie (in voorbereiding):** `2.8.6`
+- [x] **Live versie:** `2.8.6`
+- [x] **Volgende versie (in voorbereiding):** `2.8.7`
 - [x] **Live branch:** `main`
 - [x] **Algemene status:** **OPERATIONEEL**
 
@@ -21,14 +21,13 @@
 - [x] Governanceflow met `STATUS/BACKLOG/DECISIONS/RELEASE_NOTES` is actief; roadmapbestanden zijn uitgefaseerd.
 
 ## ⚠️ Huidige aandachtspunten
-- [x] `2.8.6` staat in voorbereiding op `main` maar is nog geen live release-tag.
 - [x] Root-workspace bevat nu gedeelde Codex-instructies naast de scannerrepo.
 
 ## 🛡️ Release-veiligheidscheck
 - [x] Workflow `.github/workflows/release.yml` bestaat en draait op `v*` tags.
-- [x] Tag `v2.8.4` bestaat lokaal en op origin.
-- [x] Tag `v2.8.4` wijst naar de live release-commit.
-- [x] `package.json` en `src/version.ts` staan klaar voor `2.8.6`.
+- [x] `package.json` en `src/version.ts` staan op `2.8.6`.
+- [ ] Tag `v2.8.6` staat live op origin.
+- [ ] GitHub Release met ZIP asset voor `v2.8.6` is bevestigd.
 
 ## 🚩 Operationele Afspraken
 - [x] Een release-lijn: `main` + semver tags.
